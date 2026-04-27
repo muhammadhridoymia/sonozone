@@ -12,7 +12,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
@@ -25,7 +24,7 @@ import coil.compose.AsyncImage
 fun HomeScreen(modifier: Modifier = Modifier) {
 
     val demoStories = listOf(
-        DemoStory("1", "The Lost Kingdom", "Sarah Johnson", "https://picsum.photos/300/200", "15:30", 1234, 567),
+        DemoStory("1", "The Lost Kingdom", "Sarah Johnson", "https://picsum.photos/300/200", "15:30", 1234, 1567),
         DemoStory("2", "Midnight Dreams", "Michael Chen", "https://picsum.photos/300/201", "8:45", 892, 234),
         DemoStory("3", "Ocean's Secret", "Emma Wilson", "https://picsum.photos/300/202", "22:10", 2456, 890)
     )
@@ -33,7 +32,7 @@ fun HomeScreen(modifier: Modifier = Modifier) {
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(Color(0xFFF5F5F5))
+            .background(Color(0xFF0D0D10))
             .verticalScroll(rememberScrollState())
     ) {
 
@@ -41,15 +40,15 @@ fun HomeScreen(modifier: Modifier = Modifier) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
+                .padding(horizontal = 16.dp, vertical = 12.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = "Shono Zone",
-                fontSize = 24.sp,
+                text = "ShonoZone",
+                fontSize = 22.sp,
                 fontWeight = FontWeight.Bold,
-                color = Color(0xFF6200EE)
+                color = Color(0xFFF0EEF8)
             )
 
             OutlinedButton(onClick = {}) {
@@ -59,7 +58,59 @@ fun HomeScreen(modifier: Modifier = Modifier) {
             }
         }
 
-        StorySection("Top Stories", "Most popular", demoStories)
+        // Banner
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(160.dp)
+                .padding(horizontal = 16.dp),
+            shape = RoundedCornerShape(16.dp)
+        ) {
+            Box {
+
+                // Image (background)
+                AsyncImage(
+                    model = demoStories[2].imageUrl,
+                    contentDescription = null,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.fillMaxSize()
+                )
+
+                // Optional dark overlay (for better text visibility)
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(Color.Black.copy(alpha = 0.3f))
+                )
+
+                // Text on top
+                Column(
+                    modifier = Modifier
+                        .align(Alignment.BottomStart)
+                        .padding(16.dp)
+                ) {
+                    Text(
+                        text = "Featured Story",
+                        color = Color.White,
+                        fontSize = 14.sp
+                    )
+
+                    Text(
+                        text = demoStories[2].title,
+                        color = Color.White,
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        StorySection("Top Stories", demoStories)
+        StorySection("Top Week", demoStories)
+        StorySection("Top Month", demoStories)
+        StorySection("Top Year", demoStories)
 
         Spacer(modifier = Modifier.height(80.dp))
     }
@@ -69,21 +120,33 @@ fun HomeScreen(modifier: Modifier = Modifier) {
 @Composable
 fun StorySection(
     title: String,
-    subtitle: String,
     stories: List<DemoStory>
 ) {
     Column {
 
-        Text(
-            text = title,
-            fontSize = 20.sp,
-            fontWeight = FontWeight.Bold,
-            modifier = Modifier.padding(16.dp)
-        )
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 8.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ){
+            Text(
+                text = title,
+                fontSize = 18.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = Color(0xFFF0EEF8)
+            )
+
+            TextButton(onClick = {}) {
+                Text("See all", fontSize = 12.sp)
+            }
+        }
 
         Row(
             modifier = Modifier
                 .horizontalScroll(rememberScrollState())
+                .padding(start = 8.dp)
         ) {
             stories.forEach {
                 StoryCard(it)
@@ -97,21 +160,55 @@ fun StoryCard(story: DemoStory) {
     Card(
         modifier = Modifier
             .width(200.dp)
-            .padding(8.dp)
+            .padding(5.dp),
+        shape = RoundedCornerShape(10.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
         Column {
+
             AsyncImage(
                 model = story.imageUrl,
                 contentDescription = null,
-                modifier = Modifier.height(140.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(100.dp),
                 contentScale = ContentScale.Crop
             )
 
-            Text(story.title, modifier = Modifier.padding(8.dp))
+            Column(modifier = Modifier.padding(5.dp)) {
+
+                Text(
+                    text = story.title,
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    maxLines = 1
+                )
+
+                Spacer(modifier = Modifier.height(4.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+
+                ) {
+                    Text(
+                        text = "${formatCount(story.views)} views",
+                        fontSize = 7.sp,
+                        color = Color.White
+                    )
+                    Text(
+                        text = "${formatCount(story.likes)} likes",
+                        fontSize = 7.sp,
+                        color = Color.White
+                    )
+                }
+            }
         }
     }
 }
 
+private fun formatCount(n: Int): String =
+    if (n >= 1000) "${"%.1f".format(n / 1000.0)}K" else n.toString()
 data class DemoStory(
     val id: String,
     val title: String,
@@ -121,3 +218,4 @@ data class DemoStory(
     val views: Int,
     val likes: Int
 )
+

@@ -12,7 +12,10 @@ import androidx.navigation.compose.*
 import com.example.sonozone.ui.components.BottomNavigation
 import com.example.sonozone.ui.screens.HomeScreen
 import com.example.sonozone.ui.theme.SonoZoneTheme
-
+import com.example.sonozone.ui.screens.LibraryScreen
+import com.example.sonozone.ui.screens.ProfileScreen
+import com.example.sonozone.ui.screens.SearchScreen
+import com.example.sonozone.ui.screens.LinesScreen
 class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -42,11 +45,17 @@ class MainActivity : ComponentActivity() {
                         }
 
                         composable("library") {
-                            HomeScreen() // temp
+                            LibraryScreen() // temp
                         }
 
                         composable("profile") {
-                            HomeScreen() // temp
+                            ProfileScreen() // temp
+                        }
+                        composable("search") {
+                            SearchScreen() // temp
+                        }
+                        composable("lines") {
+                            LinesScreen() // temp
                         }
                     }
                 }
