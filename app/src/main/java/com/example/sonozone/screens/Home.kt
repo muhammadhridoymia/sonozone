@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -12,19 +13,32 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 
+private val Accent        = Color(0xFFA78BFA)
+private fun formatCount(n: Int): String = if (n >= 1000) "${"%.1f".format(n / 1000.0)}K" else n.toString()
+data class DemoStory(
+    val id: String,
+    val title: String,
+    val author: String,
+    val imageUrl: String,
+    val duration: String,
+    val views: Int,
+    val likes: Int
+)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(modifier: Modifier = Modifier) {
 
     val demoStories = listOf(
-        DemoStory("1", "The Lost Kingdom", "Sarah Johnson", "https://picsum.photos/300/200", "15:30", 1234, 1567),
+        DemoStory("1", "The Lost Kingdom is found", "Sarah Johnson", "https://picsum.photos/300/200", "15:30", 1234, 1567),
         DemoStory("2", "Midnight Dreams", "Michael Chen", "https://picsum.photos/300/201", "8:45", 892, 234),
         DemoStory("3", "Ocean's Secret", "Emma Wilson", "https://picsum.photos/300/202", "22:10", 2456, 890)
     )
@@ -159,7 +173,7 @@ fun StorySection(
 fun StoryCard(story: DemoStory) {
     Card(
         modifier = Modifier
-            .width(200.dp)
+            .width(180.dp)
             .padding(5.dp),
         shape = RoundedCornerShape(10.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
@@ -179,9 +193,10 @@ fun StoryCard(story: DemoStory) {
 
                 Text(
                     text = story.title,
-                    fontSize = 14.sp,
+                    fontSize = 10.sp,
                     fontWeight = FontWeight.SemiBold,
-                    maxLines = 1
+                    maxLines = 1,
+                    overflow= TextOverflow.Ellipsis
                 )
 
                 Spacer(modifier = Modifier.height(4.dp))
@@ -191,31 +206,22 @@ fun StoryCard(story: DemoStory) {
                     horizontalArrangement = Arrangement.SpaceBetween
 
                 ) {
-                    Text(
-                        text = "${formatCount(story.views)} views",
-                        fontSize = 7.sp,
-                        color = Color.White
-                    )
-                    Text(
-                        text = "${formatCount(story.likes)} likes",
-                        fontSize = 7.sp,
-                        color = Color.White
-                    )
+                    MiniPill("${story.duration}", Accent, Color.Black)
+                    MiniPill( "${formatCount(story.views)} views", Color.White, Color.Black)
                 }
             }
         }
     }
 }
 
-private fun formatCount(n: Int): String =
-    if (n >= 1000) "${"%.1f".format(n / 1000.0)}K" else n.toString()
-data class DemoStory(
-    val id: String,
-    val title: String,
-    val author: String,
-    val imageUrl: String,
-    val duration: String,
-    val views: Int,
-    val likes: Int
-)
-
+@Composable
+private fun MiniPill(label: String, textColor: Color, bgColor: Color) {
+    Box(
+        modifier = Modifier
+            .clip(CircleShape)
+            .background(bgColor)
+            .padding(horizontal = 7.dp, vertical = 2.dp)
+    ) {
+        Text(label, fontSize = 10.sp, color = textColor)
+    }
+}

@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
@@ -23,7 +24,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 
-// ── Tokens (same as HomeScreen) ───────────────────────────────
+
+// Tokens (same as HomeScreen)
 private val BgPage      = Color(0xFF0D0D10)
 private val BgCard      = Color(0xFF18171F)
 private val BgInput     = Color(0xFF1C1B24)
@@ -41,7 +43,19 @@ private val categories = listOf(
     "horror", "islamic/moral", "folktale", "science fiction", "others"
 )
 
-// ── Dummy model (replace with your real one) ──────────────────
+private fun formatCount(n: Int): String =
+    if (n >= 1000) "${"%.1f".format(n / 1000.0)}K" else n.toString()
+
+private fun sampleStories() = listOf(
+    Story("1", "The Lost Kingdom",  "Sarah Johnson", "https://picsum.photos/seed/s1/320/200", 15, 1234, 567),
+    Story("2", "Midnight Dreams",   "Michael Chen",  "https://picsum.photos/seed/s2/320/201",  8,  892, 234),
+    Story("3", "Ocean's Secret",    "Emma Wilson",   "https://picsum.photos/seed/s3/320/202", 22, 2456, 890),
+    Story("4", "Silent Shores",     "Aisha Rahman",  "https://picsum.photos/seed/s4/320/203", 12, 3100, 412),
+    Story("5", "The Red Thread",    "James Park",    "https://picsum.photos/seed/s5/320/204", 18, 1800, 330),
+    Story("6", "Ember & Ash",       "Layla Torres",  "https://picsum.photos/seed/s6/320/205", 10,  990, 155),
+)
+
+// Dummy model (replace with your real one)
 data class Story(
     val id: String,
     val title: String,
@@ -67,7 +81,7 @@ fun SearchScreen(
             .fillMaxSize()
             .background(BgPage)
     ) {
-        // ── Search Bar ─────────────────────────────────────────
+        // Search Bar
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -90,10 +104,22 @@ fun SearchScreen(
                     tint = TextMuted,
                     modifier = Modifier.size(18.dp)
                 )
-                BasicTextField_Simple(
+                BasicTextField(
                     value = query,
                     onValueChange = { query = it },
-                    placeholder = "Search stories or writer..."
+                    singleLine = true,
+                    textStyle = LocalTextStyle.current.copy(
+                        color = TextPrimary,
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.SemiBold
+                    ),
+                    modifier = Modifier.fillMaxWidth(),
+                    decorationBox = { innerTextField ->
+                        if (query.isEmpty()) {
+                            Text("Search", fontSize = 14.sp, color = TextMuted)
+                        }
+                        innerTextField()
+                    }
                 )
             }
 
@@ -110,7 +136,7 @@ fun SearchScreen(
             }
         }
 
-        // ── Category chips ─────────────────────────────────────
+        // Category chips
         Row(
             modifier = Modifier
                 .horizontalScroll(rememberScrollState())
@@ -134,19 +160,11 @@ fun SearchScreen(
                 }
             }
         }
-
-        // ── Results grid ───────────────────────────────────────
-        if (isLoading) {
-            LoadingGrid()
-        } else if (stories.isEmpty()) {
-            EmptyState()
-        } else {
-            StoriesGrid(stories = stories, onStoryClick = onStoryClick)
-        }
+        StoriesGrid(stories, onStoryClick)
     }
 }
 
-// ── Stories grid ──────────────────────────────────────────────
+// Stories grid
 @Composable
 private fun StoriesGrid(stories: List<Story>, onStoryClick: (String) -> Unit) {
     // Simple 2-column grid via Column + chunked rows
@@ -177,7 +195,7 @@ private fun StoriesGrid(stories: List<Story>, onStoryClick: (String) -> Unit) {
     }
 }
 
-// ── Story card ────────────────────────────────────────────────
+//Story card
 @Composable
 private fun StoryCard(story: Story, modifier: Modifier = Modifier, onClick: () -> Unit) {
     Column(
@@ -213,64 +231,16 @@ private fun StoryCard(story: Story, modifier: Modifier = Modifier, onClick: () -
             )
             Spacer(Modifier.height(6.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(5.dp)) {
-                MiniPill("${story.duration}m",  TextSecondary, BgPill)
-                MiniPill("${formatCount(story.views)} views", Accent, AccentBg)
+                MiniPill("${story.duration}:00",  Accent, BgPill)
+                MiniPill("${formatCount(story.views)} views", Color.White, AccentBg)
             }
         }
     }
 }
 
-// ── Loading skeleton ──────────────────────────────────────────
-@Composable
-private fun LoadingGrid() {
-    Column(
-        modifier = Modifier
-            .verticalScroll(rememberScrollState())
-            .padding(horizontal = 12.dp),
-        verticalArrangement = Arrangement.spacedBy(10.dp)
-    ) {
-        Spacer(Modifier.height(0.dp))
-        repeat(4) {
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(10.dp),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                repeat(2) {
-                    Box(
-                        modifier = Modifier
-                            .weight(1f)
-                            .height(160.dp)
-                            .clip(RoundedCornerShape(12.dp))
-                            .background(BgCard)
-                    )
-                }
-            }
-        }
-    }
-}
 
-// ── Empty state ───────────────────────────────────────────────
-@Composable
-private fun EmptyState() {
-    Column(
-        modifier = Modifier.fillMaxSize(),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
-    ) {
-        Icon(
-            Icons.Default.Search,
-            contentDescription = null,
-            tint = TextMuted,
-            modifier = Modifier.size(56.dp)
-        )
-        Spacer(Modifier.height(12.dp))
-        Text("No stories found", fontSize = 16.sp, fontWeight = FontWeight.SemiBold, color = TextPrimary)
-        Spacer(Modifier.height(4.dp))
-        Text("Try a different keyword or category", fontSize = 13.sp, color = TextMuted)
-    }
-}
 
-// ── Reusable pill ─────────────────────────────────────────────
+// Reusable pill
 @Composable
 private fun MiniPill(label: String, textColor: Color, bgColor: Color) {
     Box(
@@ -282,41 +252,3 @@ private fun MiniPill(label: String, textColor: Color, bgColor: Color) {
         Text(label, fontSize = 10.sp, color = textColor)
     }
 }
-
-// ── BasicTextField wrapper ────────────────────────────────────
-@Composable
-private fun BasicTextField_Simple(
-    value: String,
-    onValueChange: (String) -> Unit,
-    placeholder: String
-) {
-    androidx.compose.foundation.text.BasicTextField(
-        value = value,
-        onValueChange = onValueChange,
-        singleLine = true,
-        textStyle = androidx.compose.ui.text.TextStyle(
-            color = TextPrimary,
-            fontSize = 14.sp
-        ),
-        modifier = Modifier.fillMaxWidth(),
-        decorationBox = { inner ->
-            if (value.isEmpty()) {
-                Text(placeholder, fontSize = 14.sp, color = TextMuted)
-            }
-            inner()
-        }
-    )
-}
-
-// ── Helpers ───────────────────────────────────────────────────
-private fun formatCount(n: Int): String =
-    if (n >= 1000) "${"%.1f".format(n / 1000.0)}K" else n.toString()
-
-private fun sampleStories() = listOf(
-    Story("1", "The Lost Kingdom",  "Sarah Johnson", "https://picsum.photos/seed/s1/320/200", 15, 1234, 567),
-    Story("2", "Midnight Dreams",   "Michael Chen",  "https://picsum.photos/seed/s2/320/201",  8,  892, 234),
-    Story("3", "Ocean's Secret",    "Emma Wilson",   "https://picsum.photos/seed/s3/320/202", 22, 2456, 890),
-    Story("4", "Silent Shores",     "Aisha Rahman",  "https://picsum.photos/seed/s4/320/203", 12, 3100, 412),
-    Story("5", "The Red Thread",    "James Park",    "https://picsum.photos/seed/s5/320/204", 18, 1800, 330),
-    Story("6", "Ember & Ash",       "Layla Torres",  "https://picsum.photos/seed/s6/320/205", 10,  990, 155),
-)

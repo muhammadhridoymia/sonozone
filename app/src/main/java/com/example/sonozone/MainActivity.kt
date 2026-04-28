@@ -16,6 +16,7 @@ import com.example.sonozone.ui.screens.LibraryScreen
 import com.example.sonozone.ui.screens.ProfileScreen
 import com.example.sonozone.ui.screens.SearchScreen
 import com.example.sonozone.ui.screens.LinesScreen
+import com.example.sonozone.ui.screens.PlayerScreen
 class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -56,6 +57,10 @@ class MainActivity : ComponentActivity() {
                         }
                         composable("lines") {
                             LinesScreen() // temp
+                        }
+                        composable("player") { backStackEntry ->
+                            val storyId = backStackEntry.arguments?.getString("storyId") ?: "1"
+                            PlayerScreen(storyId)
                         }
                     }
                 }
