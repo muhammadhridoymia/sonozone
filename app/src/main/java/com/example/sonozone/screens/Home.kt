@@ -3,16 +3,15 @@ package com.example.sonozone.ui.screens
 import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
+import androidx.compose.runtime.*
+import androidx.compose.ui.*
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
@@ -20,164 +19,266 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
+import com.example.sonozone.Story
+import com.example.sonozone.TopStoriesViewModel
 
-private val Accent        = Color(0xFFA78BFA)
-private fun formatCount(n: Int): String = if (n >= 1000) "${"%.1f".format(n / 1000.0)}K" else n.toString()
-data class DemoStory(
-    val id: String,
-    val title: String,
-    val author: String,
-    val imageUrl: String,
-    val duration: String,
-    val views: Int,
-    val likes: Int
-)
+private val Accent = Color(0xFFA78BFA)
+
+private fun formatCount(n: Int): String {
+    return if (n >= 1000) "${"%.1f".format(n / 1000.0)}K" else n.toString()
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HomeScreen(modifier: Modifier = Modifier) {
+fun HomeScreen(
+    modifier: Modifier = Modifier
+) {
+    val viewModel: TopStoriesViewModel = viewModel()
 
-    val demoStories = listOf(
-        DemoStory("1", "The Lost Kingdom is found", "Sarah Johnson", "https://picsum.photos/300/200", "15:30", 1234, 1567),
-        DemoStory("2", "Midnight Dreams", "Michael Chen", "https://picsum.photos/300/201", "8:45", 892, 234),
-        DemoStory("3", "Ocean's Secret", "Emma Wilson", "https://picsum.photos/300/202", "22:10", 2456, 890)
-    )
+    val popularList = viewModel.allTimeList.value
+    val weekList = viewModel.weekList.value
+    val monthList = viewModel.monthList.value
+    val yearList = viewModel.yearList.value
 
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .background(Color(0xFF0D0D10))
-            .verticalScroll(rememberScrollState())
-    ) {
+    val listState = rememberLazyListState()
 
-        // Header
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 12.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                text = "ShonoZone",
-                fontSize = 22.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color(0xFFF0EEF8)
-            )
-
-            OutlinedButton(onClick = {}) {
-                Icon(Icons.Default.Search, contentDescription = "Search")
-                Spacer(modifier = Modifier.width(4.dp))
-                Text("Search")
-            }
+    // first load
+    LaunchedEffect(Unit) {
+        if (popularList.isEmpty()) {
+            viewModel.getTopStories("allTime")
         }
+    }
 
-        // Banner
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(160.dp)
-                .padding(horizontal = 16.dp),
-            shape = RoundedCornerShape(16.dp)
-        ) {
-            Box {
+    // load on scroll
+    LaunchedEffect(listState.firstVisibleItemIndex) {
 
-                // Image (background)
-                AsyncImage(
-                    model = demoStories[2].imageUrl,
-                    contentDescription = null,
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier.fillMaxSize()
-                )
+        when (listState.firstVisibleItemIndex) {
 
-                // Optional dark overlay (for better text visibility)
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(Color.Black.copy(alpha = 0.3f))
-                )
+            1 -> {
+                if (weekList.isEmpty()) {
+                    viewModel.getTopStories("week")
+                }
+            }
 
-                // Text on top
-                Column(
-                    modifier = Modifier
-                        .align(Alignment.BottomStart)
-                        .padding(16.dp)
-                ) {
-                    Text(
-                        text = "Featured Story",
-                        color = Color.White,
-                        fontSize = 14.sp
-                    )
+            2 -> {
+                if (monthList.isEmpty()) {
+                    viewModel.getTopStories("month")
+                }
+            }
 
-                    Text(
-                        text = demoStories[2].title,
-                        color = Color.White,
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold
-                    )
+            3 -> {
+                if (yearList.isEmpty()) {
+                    viewModel.getTopStories("year")
                 }
             }
         }
+    }
 
-        Spacer(modifier = Modifier.height(16.dp))
+    LazyColumn(
+        state = listState,
+        modifier = modifier
+            .fillMaxSize()
+            .background(Color(0xFF0D0D10))
+    ) {
 
-        StorySection("Top Stories", demoStories)
-        StorySection("Top Week", demoStories)
-        StorySection("Top Month", demoStories)
-        StorySection("Top Year", demoStories)
+        item {
+            Header()
+        }
 
-        Spacer(modifier = Modifier.height(80.dp))
+        item {
+            Banner(popularList)
+        }
+
+        item {
+            StorySection("Popular Stories", popularList)
+        }
+
+        item {
+            StorySection("Top Stories This Week", weekList)
+        }
+
+        item {
+            StorySection("Top Stories This Month", monthList)
+        }
+
+        item {
+            StorySection("Top Stories This Year", yearList)
+        }
+
+        item {
+            Spacer(modifier = Modifier.height(80.dp))
+        }
     }
 }
 
+@Composable
+fun Header() {
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+
+        Text(
+            text = "ShonoZone",
+            fontSize = 22.sp,
+            fontWeight = FontWeight.Bold,
+            color = Color.White
+        )
+
+        OutlinedButton(onClick = {}) {
+
+            Icon(Icons.Default.Search, null)
+
+            Spacer(modifier = Modifier.width(4.dp))
+
+            Text("Search")
+        }
+    }
+}
+
+@Composable
+fun Banner(list: List<Story>) {
+
+    if (list.isEmpty()) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(170.dp)
+                .padding(horizontal = 16.dp)
+                .clip(RoundedCornerShape(16.dp))
+                .background(Color.DarkGray),
+            contentAlignment = Alignment.Center
+        ) {
+            CircularProgressIndicator(color = Accent)
+        }
+        return
+    }
+
+    val story = list.first()
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(170.dp)
+            .padding(horizontal = 16.dp),
+        shape = RoundedCornerShape(16.dp)
+    ) {
+
+        Box {
+
+            AsyncImage(
+                model = story.imageUrl,
+                contentDescription = null,
+                contentScale = ContentScale.Crop,
+                modifier = Modifier.fillMaxSize()
+            )
+
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color.Black.copy(alpha = 0.45f))
+            )
+
+            Column(
+                modifier = Modifier
+                    .align(Alignment.BottomStart)
+                    .padding(16.dp)
+            ) {
+
+                Text(
+                    text = "Featured Story",
+                    color = Color.White,
+                    fontSize = 12.sp
+                )
+
+                Text(
+                    text = story.title ?: "",
+                    color = Color.White,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 18.sp,
+                    maxLines = 2
+                )
+
+                Text(
+                    text = "by ${story.writer}",
+                    color = Color.White.copy(alpha = 0.7f),
+                    fontSize = 12.sp
+                )
+            }
+        }
+    }
+}
 
 @Composable
 fun StorySection(
     title: String,
-    stories: List<DemoStory>
+    stories: List<Story>
 ) {
+
     Column {
 
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 8.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ){
+                .padding(horizontal = 16.dp, vertical = 10.dp),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+
             Text(
                 text = title,
+                color = Color.White,
                 fontSize = 18.sp,
-                fontWeight = FontWeight.SemiBold,
-                color = Color(0xFFF0EEF8)
+                fontWeight = FontWeight.SemiBold
             )
 
             TextButton(onClick = {}) {
-                Text("See all", fontSize = 12.sp)
+                Text("See all")
             }
         }
 
-        Row(
-            modifier = Modifier
-                .horizontalScroll(rememberScrollState())
-                .padding(start = 8.dp)
-        ) {
-            stories.forEach {
-                StoryCard(it)
+        if (stories.isEmpty()) {
+
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(120.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator(color = Accent)
+            }
+
+        } else {
+
+            Row(
+                modifier = Modifier
+                    .horizontalScroll(rememberScrollState())
+                    .padding(start = 8.dp)
+            ) {
+
+                stories.forEach {
+                    StoryCard(it)
+                }
             }
         }
     }
 }
 
 @Composable
-fun StoryCard(story: DemoStory) {
+fun StoryCard(story: Story) {
+
     Card(
         modifier = Modifier
             .width(180.dp)
             .padding(5.dp),
-        shape = RoundedCornerShape(10.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+        shape = RoundedCornerShape(10.dp)
     ) {
+
         Column {
 
             AsyncImage(
@@ -189,14 +290,22 @@ fun StoryCard(story: DemoStory) {
                 contentScale = ContentScale.Crop
             )
 
-            Column(modifier = Modifier.padding(5.dp)) {
+            Column(
+                modifier = Modifier.padding(6.dp)
+            ) {
 
                 Text(
-                    text = story.title,
+                    text = story.title ?: "Untitled",
                     fontSize = 10.sp,
-                    fontWeight = FontWeight.SemiBold,
+                    fontWeight = FontWeight.Bold,
                     maxLines = 1,
-                    overflow= TextOverflow.Ellipsis
+                    overflow = TextOverflow.Ellipsis
+                )
+
+                Text(
+                    text = "by ${story.writer}",
+                    fontSize = 9.sp,
+                    color = Color.Gray
                 )
 
                 Spacer(modifier = Modifier.height(4.dp))
@@ -204,10 +313,19 @@ fun StoryCard(story: DemoStory) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween
-
                 ) {
-                    MiniPill("${story.duration}", Accent, Color.Black)
-                    MiniPill( "${formatCount(story.views)} views", Color.White, Color.Black)
+
+                    MiniPill(
+                        "${story.duration}:00",
+                        Accent,
+                        Color.Black
+                    )
+
+                    MiniPill(
+                        "${formatCount(story.status?.likes ?: 0)} likes",
+                        Color.White,
+                        Color.Black
+                    )
                 }
             }
         }
@@ -215,13 +333,23 @@ fun StoryCard(story: DemoStory) {
 }
 
 @Composable
-private fun MiniPill(label: String, textColor: Color, bgColor: Color) {
+private fun MiniPill(
+    text: String,
+    textColor: Color,
+    bgColor: Color
+) {
+
     Box(
         modifier = Modifier
             .clip(CircleShape)
             .background(bgColor)
-            .padding(horizontal = 7.dp, vertical = 2.dp)
+            .padding(horizontal = 8.dp, vertical = 2.dp)
     ) {
-        Text(label, fontSize = 10.sp, color = textColor)
+
+        Text(
+            text = text,
+            fontSize = 10.sp,
+            color = textColor
+        )
     }
 }
