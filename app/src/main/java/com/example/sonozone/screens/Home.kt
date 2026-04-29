@@ -20,9 +20,11 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.example.sonozone.Story
 import com.example.sonozone.TopStoriesViewModel
+import com.example.sonozone.Loading.StorySkeletonCard
 
 private val Accent = Color(0xFFA78BFA)
 
@@ -32,9 +34,8 @@ private fun formatCount(n: Int): String {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HomeScreen(
-    modifier: Modifier = Modifier
-) {
+fun HomeScreen(navController: NavController, modifier: Modifier = Modifier) {
+
     val viewModel: TopStoriesViewModel = viewModel()
 
     val popularList = viewModel.allTimeList.value
@@ -88,23 +89,23 @@ fun HomeScreen(
         }
 
         item {
-            Banner(popularList)
+            Banner()
         }
 
         item {
-            StorySection("Popular Stories", popularList)
+            StorySection("Popular Stories", popularList,navController = navController)
         }
 
         item {
-            StorySection("Top Stories This Week", weekList)
+            StorySection("Top Stories This Week", weekList,navController = navController)
         }
 
         item {
-            StorySection("Top Stories This Month", monthList)
+            StorySection("Top Stories This Month", monthList,navController = navController)
         }
 
         item {
-            StorySection("Top Stories This Year", yearList)
+            StorySection("Top Stories This Year", yearList,navController = navController)
         }
 
         item {
@@ -143,9 +144,11 @@ fun Header() {
 }
 
 @Composable
-fun Banner(list: List<Story>) {
+fun Banner() {
+    // Dummy data for now (replace with real data)
+    val url ="https://res.cloudinary.com/dyqmmzz5f/image/upload/v1776931178/listenBanner_tkoqye.png"
 
-    if (list.isEmpty()) {
+    if (url.isEmpty()) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -160,7 +163,6 @@ fun Banner(list: List<Story>) {
         return
     }
 
-    val story = list.first()
 
     Card(
         modifier = Modifier
@@ -173,7 +175,7 @@ fun Banner(list: List<Story>) {
         Box {
 
             AsyncImage(
-                model = story.imageUrl,
+                model = url,
                 contentDescription = null,
                 contentScale = ContentScale.Crop,
                 modifier = Modifier.fillMaxSize()
@@ -198,17 +200,11 @@ fun Banner(list: List<Story>) {
                 )
 
                 Text(
-                    text = story.title ?: "",
+                    text = "Explore the world of stories",
                     color = Color.White,
                     fontWeight = FontWeight.Bold,
                     fontSize = 18.sp,
                     maxLines = 2
-                )
-
-                Text(
-                    text = "by ${story.writer}",
-                    color = Color.White.copy(alpha = 0.7f),
-                    fontSize = 12.sp
                 )
             }
         }
@@ -218,7 +214,8 @@ fun Banner(list: List<Story>) {
 @Composable
 fun StorySection(
     title: String,
-    stories: List<Story>
+    stories: List<Story>,
+    navController: NavController
 ) {
 
     Column {
@@ -229,7 +226,6 @@ fun StorySection(
                 .padding(horizontal = 16.dp, vertical = 10.dp),
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-
             Text(
                 text = title,
                 color = Color.White,
@@ -244,13 +240,15 @@ fun StorySection(
 
         if (stories.isEmpty()) {
 
-            Box(
+            Row(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .height(120.dp),
-                contentAlignment = Alignment.Center
+                    .horizontalScroll(rememberScrollState())
+                    .padding(start = 8.dp)
             ) {
-                CircularProgressIndicator(color = Accent)
+
+                repeat(4) {
+                    StorySkeletonCard()
+                }
             }
 
         } else {
@@ -260,9 +258,8 @@ fun StorySection(
                     .horizontalScroll(rememberScrollState())
                     .padding(start = 8.dp)
             ) {
-
                 stories.forEach {
-                    StoryCard(it)
+                    StoryCard(it,navController=navController)
                 }
             }
         }
@@ -270,13 +267,16 @@ fun StorySection(
 }
 
 @Composable
-fun StoryCard(story: Story) {
+fun StoryCard(story: Story,navController: NavController) {
 
     Card(
         modifier = Modifier
             .width(180.dp)
             .padding(5.dp),
-        shape = RoundedCornerShape(10.dp)
+        shape = RoundedCornerShape(10.dp),
+        //naviget to player screen
+        onClick = { navController.navigate("player/${story._id}") }
+
     ) {
 
         Column {
@@ -344,6 +344,7 @@ private fun MiniPill(
             .clip(CircleShape)
             .background(bgColor)
             .padding(horizontal = 8.dp, vertical = 2.dp)
+
     ) {
 
         Text(

@@ -42,7 +42,7 @@ class MainActivity : ComponentActivity() {
                     ) {
 
                         composable("home") {
-                            HomeScreen()
+                            HomeScreen( navController = navController, modifier = Modifier.fillMaxSize())
                         }
 
                         composable("library") {
@@ -58,9 +58,9 @@ class MainActivity : ComponentActivity() {
                         composable("lines") {
                             LinesScreen() // temp
                         }
-                        composable("player") { backStackEntry ->
+                        composable("player/{storyId}") { backStackEntry ->
                             val storyId = backStackEntry.arguments?.getString("storyId") ?: "1"
-                            PlayerScreen(storyId)
+                            PlayerScreen(storyId, onStoryClick = { storyId -> navController.navigate("player/$storyId") })
                         }
                     }
                 }

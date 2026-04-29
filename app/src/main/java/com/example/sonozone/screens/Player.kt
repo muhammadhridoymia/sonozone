@@ -25,9 +25,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.media3.common.MediaItem
 import androidx.media3.exoplayer.ExoPlayer
 import coil.compose.AsyncImage
+import com.example.sonozone.Audio
+import com.example.sonozone.AudioViewModel
 import kotlinx.coroutines.delay
 
 // ── Tokens ────────────────────────────────────────────────────
@@ -58,22 +61,36 @@ data class PlayerStory(
 
 // ── Screen ────────────────────────────────────────────────────
 @Composable
-fun PlayerScreen(
-    storyId: String = "1",
-    onStoryClick: (String) -> Unit = {}
-) {
+fun PlayerScreen(storyId: String, onStoryClick: (String) -> Unit = {}) {
+
+    println("storyId: $storyId")
     // Replace with ViewModel
-    val story = remember { samplePlayerStory() }
+    val viewModel: AudioViewModel = viewModel()
+    val story = viewModel.selectedAudio.value
+    val isAudioLoading = viewModel.isAudioLoading.value
+    LaunchedEffect(storyId) {
+        viewModel.fetchAudio(storyId)
+    }
+
+
+
     val related = remember { sampleRelated() }
 
     val context = LocalContext.current
 
+    //select language
+    val bangla = story?.audio?.bangla?.url
+    val english = story?.audio?.english?.url
+    val arabic = story?.audio?.arabic?.url
+    val lang = if (bangla != null) "bangla" else if (english != null) "english" else "arabic"
+
     // Audio language selection
-    var selectedLang by remember { mutableStateOf("bangla") }
+    var selectedLang by remember { mutableStateOf(lang) }
+
     val audioUrl = when (selectedLang) {
-        "english" -> story.englishAudio
-        "arabic"  -> story.arabicAudio
-        else      -> story.banglaAudio
+        "english" -> story?.audio?.english?.url
+        "arabic"  -> story?.audio?.arabic?.url
+        else      -> story?.audio?.bangla?.url
     }
 
     // ExoPlayer
@@ -102,7 +119,7 @@ fun PlayerScreen(
     }
 
     // Reload on lang change
-    LaunchedEffect(selectedLang) {
+    LaunchedEffect(audioUrl) {
         audioUrl?.let {
             player.stop()
             player.setMediaItem(MediaItem.fromUri(it))
@@ -128,8 +145,8 @@ fun PlayerScreen(
                 .height(300.dp)
         ) {
             AsyncImage(
-                model = story.imageUrl,
-                contentDescription = story.title,
+                model = story?.imageUrl,
+                contentDescription = story?.title,
                 contentScale = ContentScale.Crop,
                 modifier = Modifier.fillMaxSize()
             )
@@ -150,7 +167,7 @@ fun PlayerScreen(
         Column(modifier = Modifier.padding(horizontal = 20.dp)) {
 
             Text(
-                text = story.title,
+                text = story?.title?:"",
                 fontSize = 22.sp,
                 fontWeight = FontWeight.Bold,
                 color = TextPrimary,
@@ -158,8 +175,8 @@ fun PlayerScreen(
                 overflow = TextOverflow.Ellipsis
             )
             Spacer(Modifier.height(4.dp))
-            Text("Writer: ${story.writer}", fontSize = 13.sp, color = TextSecondary)
-            Text("Narrated by ${story.narrator}", fontSize = 12.sp, color = TextMuted)
+            Text("Writer: ${story?.writer}", fontSize = 13.sp, color = TextSecondary)
+            Text("Narrated by ${story?.writer}", fontSize = 12.sp, color = TextMuted)
 
             Spacer(Modifier.height(20.dp))
 
@@ -272,9 +289,9 @@ fun PlayerScreen(
 
             // ── Language selector ──────────────────────────────
             val langs = buildList {
-                if (story.banglaAudio  != null) add("bangla")
-                if (story.englishAudio != null) add("english")
-                if (story.arabicAudio  != null) add("arabic")
+                if (story?.audio?.bangla  != null) add("bangla")
+                if (story?.audio?.english != null) add("english")
+                if (story?.audio?.arabic  != null) add("arabic")
             }
             if (langs.size > 1) {
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -377,7 +394,7 @@ private fun RelatedCard(
         }
         Column(modifier = Modifier.padding(8.dp)) {
             Text(
-                story.title,
+                story?.title?:"",
                 fontSize = 12.sp,
                 fontWeight = FontWeight.SemiBold,
                 color = TextPrimary,
@@ -451,19 +468,7 @@ private fun formatMs(ms: Long): String {
 private fun formatCount(n: Int) =
     if (n >= 1000) "${"%.1f".format(n / 1000.0)}K" else n.toString()
 
-// ── Sample data ───────────────────────────────────────────────
-private fun samplePlayerStory() = PlayerStory(
-    id = "1",
-    title = "The Lost Kingdom of the Eastern Hills",
-    writer = "Sarah Johnson",
-    narrator = "Sono Zone",
-    imageUrl = "https://picsum.photos/seed/player1/800/500",
-    banglaAudio  = "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3",
-    englishAudio = "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3",
-    likes = 1234,
-    views = 8900,
-    duration = 15
-)
+
 
 private fun sampleRelated() = listOf(
     PlayerStory("2", "Midnight Dreams",  "Michael Chen",  imageUrl = "https://picsum.photos/seed/r1/320/200", views = 892,  likes = 234, duration = 8),
