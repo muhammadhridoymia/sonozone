@@ -1,57 +1,98 @@
 package com.example.sonozone.ui.screens
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.List
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.*
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.*
 import coil.compose.AsyncImage
 
+private val BgPage = Color(0xFF0D0D10)
+
 @Composable
 fun ProfileScreen(modifier: Modifier = Modifier) {
-
-    // Sample user data
     var balance by remember { mutableStateOf(50) }
+
     val username = "Sarah Johnson"
     val email = "sarah.johnson@example.com"
     val profileImage = "https://picsum.photos/200/200"
-    val savedStories = 12
 
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(Color(0xFFF5F5F5))
-            .padding(16.dp),
+            .background(BgPage)
+            .padding(16.dp)
+            .verticalScroll( rememberScrollState()),
         horizontalAlignment = Alignment.CenterHorizontally
-    ) {
 
-        // Profile Image
-        AsyncImage(
-            model = profileImage,
-            contentDescription = "Profile Picture",
-            modifier = Modifier
-                .size(120.dp)
-                .clip(CircleShape),
-            contentScale = ContentScale.Crop
-        )
+    ) {
+        // Profile Image with edit icon
+        Box {
+            AsyncImage(
+                model = profileImage,
+                contentDescription = "Profile Picture",
+                modifier = Modifier
+                    .size(120.dp)
+                    .clip(CircleShape),
+                contentScale = ContentScale.Crop
+            )
+            // Edit icon overlay
+            IconButton(
+                onClick = { /* Edit profile image */ },
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .size(36.dp)
+                    .background(Color.White, CircleShape)
+                    .clip(CircleShape)
+            ) {
+                Icon(
+                    Icons.Default.Edit,
+                    contentDescription = "Edit",
+                    modifier = Modifier.size(18.dp),
+                    tint = Color(0xFF6200EE)
+                )
+            }
+        }
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Username
-        Text(
-            text = username,
-            fontSize = 22.sp,
-            fontWeight = FontWeight.Bold
-        )
+        // Username with edit
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(
+                text = username,
+                fontSize = 22.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color(0xFF6200EE)
+            )
+            IconButton(onClick = { /* Edit username */ }) {
+                Icon(
+                    Icons.Default.Edit,
+                    contentDescription = "Edit",
+                    modifier = Modifier.size(16.dp),
+                    tint = Color.Gray
+                )
+            }
+        }
 
-        // Email
         Text(
             text = email,
             fontSize = 14.sp,
@@ -60,84 +101,130 @@ fun ProfileScreen(modifier: Modifier = Modifier) {
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        // Balance Card
+        // Balance Card - Fixed layout
         Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(100.dp),
+            modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(16.dp),
             colors = CardDefaults.cardColors(containerColor = Color(0xFF6200EE))
         ) {
             Column(
                 modifier = Modifier
-                    .fillMaxSize()
-                    .padding(16.dp),
-                verticalArrangement = Arrangement.Center
+                    .fillMaxWidth()
+                    .padding(16.dp)
             ) {
                 Text(
-                    text = "Balance",
+                    text = "Total Balance",
                     fontSize = 14.sp,
-                    color = Color.White
+                    color = Color.White.copy(alpha = 0.8f)
                 )
                 Text(
                     text = "$${balance}",
-                    fontSize = 24.sp,
+                    fontSize = 32.sp,
                     fontWeight = FontWeight.Bold,
                     color = Color.White
                 )
-                Spacer(modifier = Modifier.height(8.dp))
+
+                Spacer(modifier = Modifier.height(12.dp))
+
                 Button(
-                    onClick = { balance += 10 },
+                    onClick = { /* Add balance */ },
+                    shape = RoundedCornerShape(12.dp),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = Color.White,
                         contentColor = Color(0xFF6200EE)
                     ),
-                    shape = RoundedCornerShape(12.dp)
+                    modifier = Modifier.fillMaxWidth()
                 ) {
-                    Text("Add Balance +$10")
+                    Text("Add Balance", fontWeight = FontWeight.Medium)
                 }
             }
         }
 
-        Spacer(modifier = Modifier.height(24.dp))
+        Spacer(modifier = Modifier.height(16.dp))
 
-        // Saved Stories Card
-        Card(
+        // Menu Items - Better approach
+        ProfileMenuItem(
+            icon = Icons.Default.List,
+            title = "Saved Stories",
+            onClick = { /* Navigate to saved stories */ }
+        )
+
+        ProfileMenuItem(
+            icon = Icons.Default.Favorite,
+            title = "Liked Stories",
+            onClick = { /* Navigate to liked stories */ }
+        )
+
+        ProfileMenuItem(
+            icon = Icons.Default.Person,
+            title = "Favorite Writers",
+            onClick = { /* Navigate to favorite writers */ }
+        )
+
+        ProfileMenuItem(
+            icon = Icons.Default.Settings,
+            title = "Settings",
+            onClick = { /* Navigate to settings */ }
+        )
+
+        Spacer(modifier = Modifier.weight(1f))
+
+        // Logout button at bottom
+        TextButton(
+            onClick = { /* Logout */ },
+            modifier = Modifier.fillMaxWidth()
+                .background( Color.White, RoundedCornerShape(12.dp))
+        ) {
+            Text(
+                text = "Logout",
+                color = Color.Red,
+                fontWeight = FontWeight.Medium
+            )
+        }
+    }
+}
+
+@Composable
+fun ProfileMenuItem(
+    icon: ImageVector,
+    title: String,
+    onClick: () -> Unit
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp),
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+    ) {
+        Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(80.dp),
-            shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(containerColor = Color.White)
+                .clickable { onClick() }
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(horizontal = 16.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = "Saved Stories",
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Medium
-                )
-                Spacer(modifier = Modifier.weight(1f))
-                Text(
-                    text = "$savedStories",
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color(0xFF6200EE)
-                )
-            }
-        }
-
-        Spacer(modifier = Modifier.height(24.dp))
-
-        // Optional logout or settings button
-        OutlinedButton(
-            onClick = { /* Logout action */ },
-            shape = RoundedCornerShape(12.dp)
-        ) {
-            Text("Logout")
+            Icon(
+                icon,
+                contentDescription = null,
+                tint = Color(0xFF6200EE),
+                modifier = Modifier.size(24.dp)
+            )
+            Spacer(modifier = Modifier.width(16.dp))
+            Text(
+                text = title,
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Medium,
+                color = Color.Black,
+                modifier = Modifier.weight(1f)
+            )
+            Icon(
+                Icons.Default.CheckCircle,
+                contentDescription = null,
+                tint = Color.Gray,
+                modifier = Modifier.size(20.dp)
+            )
         }
     }
 }

@@ -48,11 +48,10 @@ fun BottomNavigation(navController: NavController) {
 
     val items = listOf(
         NavItem("home",    "Home",    Icons.Filled.Home,   Icons.Outlined.Home),
-        NavItem("library", "Library", Icons.Filled.AddCircle,   Icons.Outlined.AddCircle),
         NavItem("lines",   "Lines",    Icons.Filled.List,     Icons.Outlined.List),
+        NavItem("player",  "Player",  Icons.Filled.PlayArrow, Icons.Outlined.PlayArrow),
         NavItem("search",  "Search",  Icons.Filled.Search, Icons.Outlined.Search),
         NavItem("profile", "Profile", Icons.Filled.Person, Icons.Outlined.Person),
-        NavItem("player",  "Player",  Icons.Filled.PlayArrow, Icons.Outlined.PlayArrow),
     )
 
     val navBackStack by navController.currentBackStackEntryAsState()
