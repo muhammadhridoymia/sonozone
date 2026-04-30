@@ -28,9 +28,12 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.media3.common.MediaItem
 import androidx.media3.exoplayer.ExoPlayer
+import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.example.sonozone.Audio
 import com.example.sonozone.AudioViewModel
+import com.example.sonozone.RecommentStoriesViewModel
+import com.example.sonozone.Story
 import kotlinx.coroutines.delay
 
 // ── Tokens ────────────────────────────────────────────────────
@@ -44,37 +47,31 @@ private val TextSecondary = Color(0xFF9E9CAC)
 private val TextMuted     = Color(0xFF7A788A)
 private val LikeRed       = Color(0xFFFF6B8A)
 
-// ── Models ────────────────────────────────────────────────────
-data class PlayerStory(
-    val id: String,
-    val title: String,
-    val writer: String,
-    val narrator: String = "Sono Zone",
-    val imageUrl: String,
-    val banglaAudio: String? = null,
-    val englishAudio: String? = null,
-    val arabicAudio: String? = null,
-    val likes: Int = 0,
-    val views: Int = 0,
-    val duration: Int = 0
-)
 
-// ── Screen ────────────────────────────────────────────────────
+
 @Composable
-fun PlayerScreen(storyId: String, onStoryClick: (String) -> Unit = {}) {
+fun PlayerScreen(storyId: String, navController: NavController) {
 
     println("storyId: $storyId")
-    // Replace with ViewModel
+
+    //Relet Story fetched from the API
+    val reletViewModel: RecommentStoriesViewModel = viewModel()
+    val related = reletViewModel.RecommentStoriesList.value
+    val isReletloading = reletViewModel.Recommentloading.value
+
+    LaunchedEffect(storyId) {
+        reletViewModel.getRecommentStories(storyId)
+    }
+
+
+
+    //Audio Fetched from the API
     val viewModel: AudioViewModel = viewModel()
     val story = viewModel.selectedAudio.value
     val isAudioLoading = viewModel.isAudioLoading.value
     LaunchedEffect(storyId) {
         viewModel.fetchAudio(storyId)
     }
-
-
-
-    val related = remember { sampleRelated() }
 
     val context = LocalContext.current
 
@@ -346,7 +343,7 @@ fun PlayerScreen(storyId: String, onStoryClick: (String) -> Unit = {}) {
                         RelatedCard(
                             story = s,
                             modifier = Modifier.weight(1f),
-                            onClick = { onStoryClick(s.id) }
+                            onClick = {  }
                         )
                     }
                     if (row.size == 1) Spacer(Modifier.weight(1f))
@@ -361,7 +358,7 @@ fun PlayerScreen(storyId: String, onStoryClick: (String) -> Unit = {}) {
 // ── Related card ──────────────────────────────────────────────
 @Composable
 private fun RelatedCard(
-    story: PlayerStory,
+    story: Story,
     modifier: Modifier = Modifier,
     onClick: () -> Unit
 ) {
@@ -402,10 +399,10 @@ private fun RelatedCard(
                 overflow = TextOverflow.Ellipsis
             )
             Spacer(Modifier.height(2.dp))
-            Text(story.writer, fontSize = 10.sp, color = TextMuted, maxLines = 1)
+            Text(story.writer?:"", fontSize = 10.sp, color = TextMuted, maxLines = 1)
             Spacer(Modifier.height(4.dp))
             Text(
-                "${formatCount(story.views)} views • ${formatCount(story.likes)} likes",
+                "${formatCount(story.status?.likes?:0)} views • ${formatCount(story.status?.likes?:0)} likes",
                 fontSize = 10.sp,
                 color = TextMuted
             )
@@ -467,14 +464,3 @@ private fun formatMs(ms: Long): String {
 
 private fun formatCount(n: Int) =
     if (n >= 1000) "${"%.1f".format(n / 1000.0)}K" else n.toString()
-
-
-
-private fun sampleRelated() = listOf(
-    PlayerStory("2", "Midnight Dreams",  "Michael Chen",  imageUrl = "https://picsum.photos/seed/r1/320/200", views = 892,  likes = 234, duration = 8),
-    PlayerStory("3", "Ocean's Secret",   "Emma Wilson",   imageUrl = "https://picsum.photos/seed/r2/320/200", views = 2456, likes = 890, duration = 22),
-    PlayerStory("4", "Silent Shores",    "Aisha Rahman",  imageUrl = "https://picsum.photos/seed/r3/320/200", views = 3100, likes = 412, duration = 12),
-    PlayerStory("5", "The Red Thread",   "James Park",    imageUrl = "https://picsum.photos/seed/r4/320/200", views = 1800, likes = 330, duration = 18),
-    PlayerStory("6", "Ember & Ash",      "Layla Torres",  imageUrl = "https://picsum.photos/seed/r5/320/200", views = 990,  likes = 155, duration = 10),
-    PlayerStory("7", "Whispers at Dawn", "Nadia Islam",   imageUrl = "https://picsum.photos/seed/r6/320/200", views = 450,  likes = 88,  duration = 6),
-)

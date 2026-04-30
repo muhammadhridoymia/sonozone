@@ -12,6 +12,7 @@ import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.*
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
@@ -27,6 +28,7 @@ import com.example.sonozone.TopStoriesViewModel
 import com.example.sonozone.Loading.StorySkeletonCard
 
 private val Accent = Color(0xFFA78BFA)
+private val cartcolor=Color(0xFF262525)
 
 private fun formatCount(n: Int): String {
     return if (n >= 1000) "${"%.1f".format(n / 1000.0)}K" else n.toString()
@@ -275,11 +277,14 @@ fun StoryCard(story: Story,navController: NavController) {
             .padding(5.dp),
         shape = RoundedCornerShape(10.dp),
         //naviget to player screen
-        onClick = { navController.navigate("player/${story._id}") }
+        onClick = { navController.navigate("player/${story._id}")}
 
     ) {
 
-        Column {
+        Column (
+            modifier = Modifier.fillMaxSize()
+                .background(cartcolor)
+        ){
 
             AsyncImage(
                 model = story.imageUrl,

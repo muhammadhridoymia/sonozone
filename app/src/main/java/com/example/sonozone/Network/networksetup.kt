@@ -5,10 +5,12 @@ import com.example.sonozone.GetTopStoriesService
 import com.example.sonozone.AudioService
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
+import com.example.sonozone.GetMostSearchStoriesService
+import com.example.sonozone.RecommentStoriesService
 
 object RetrofitInstance {
 
-    private const val BASE_URL = "http://192.168.0.108:5000/"
+    private const val BASE_URL = "http://172.172.9.133:5000/"
 
     private val retrofit by lazy {
         Retrofit.Builder()
@@ -25,4 +27,11 @@ object RetrofitInstance {
         retrofit.create(AudioService::class.java)
     }
 
+    val getMostSearchStoriesService: GetMostSearchStoriesService by lazy {
+        retrofit.create(GetMostSearchStoriesService::class.java)
+    }
+
+    val getRecommentStoriesService: RecommentStoriesService by lazy {
+        retrofit.create(RecommentStoriesService::class.java)
+    }
 }

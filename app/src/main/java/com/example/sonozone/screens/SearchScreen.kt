@@ -22,8 +22,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavController
 import coil.compose.AsyncImage
-
+import com.example.sonozone.Loading.StorySkeletonCard
+import com.example.sonozone.MostSearchStoriesStoriesViewModel
+import com.example.sonozone.Story
 
 // Tokens (same as HomeScreen)
 private val BgPage      = Color(0xFF0D0D10)
@@ -46,35 +50,23 @@ private val categories = listOf(
 private fun formatCount(n: Int): String =
     if (n >= 1000) "${"%.1f".format(n / 1000.0)}K" else n.toString()
 
-private fun sampleStories() = listOf(
-    Story("1", "The Lost Kingdom",  "Sarah Johnson", "https://picsum.photos/seed/s1/320/200", 15, 1234, 567),
-    Story("2", "Midnight Dreams",   "Michael Chen",  "https://picsum.photos/seed/s2/320/201",  8,  892, 234),
-    Story("3", "Ocean's Secret",    "Emma Wilson",   "https://picsum.photos/seed/s3/320/202", 22, 2456, 890),
-    Story("4", "Silent Shores",     "Aisha Rahman",  "https://picsum.photos/seed/s4/320/203", 12, 3100, 412),
-    Story("5", "The Red Thread",    "James Park",    "https://picsum.photos/seed/s5/320/204", 18, 1800, 330),
-    Story("6", "Ember & Ash",       "Layla Torres",  "https://picsum.photos/seed/s6/320/205", 10,  990, 155),
-)
-
-// Dummy model (replace with your real one)
-data class Story(
-    val id: String,
-    val title: String,
-    val writer: String,
-    val imageUrl: String,
-    val duration: Int,
-    val views: Int,
-    val likes: Int
-)
-
 @Composable
 fun SearchScreen(
-    onStoryClick: (String) -> Unit = {}
+    navController: NavController,
 ) {
     var query by remember { mutableStateOf("") }
-    var isLoading by remember { mutableStateOf(false) }
 
-    // Replace with your real ViewModel / API call
-    val stories = remember { sampleStories() }
+
+    val viewModel : MostSearchStoriesStoriesViewModel = viewModel()
+    val stories = viewModel.mostSearchStoriesList.value
+    val isLoading = viewModel.mostSearchloading.value
+
+    LaunchedEffect(Unit) {
+        if (stories.isEmpty()) {
+            viewModel.getTopStories()
+        }
+    }
+
 
     Column(
         modifier = Modifier
@@ -160,35 +152,51 @@ fun SearchScreen(
                 }
             }
         }
-        StoriesGrid(stories, onStoryClick)
+        StoriesGrid(stories, navController , isLoading)
     }
 }
 
 // Stories grid
 @Composable
-private fun StoriesGrid(stories: List<Story>, onStoryClick: (String) -> Unit) {
-    // Simple 2-column grid via Column + chunked rows
+private fun StoriesGrid(stories: List<Story>, navController: NavController, isLoading: Boolean) {
     Column(
         modifier = Modifier
             .verticalScroll(rememberScrollState())
             .padding(horizontal = 12.dp),
         verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
-        Spacer(Modifier.height(0.dp))
-        stories.chunked(2).forEach { rowStories ->
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(10.dp),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                rowStories.forEach { story ->
-                    StoryCard(
-                        story = story,
-                        modifier = Modifier.weight(1f),
-                        onClick = { onStoryClick(story.id) }
-                    )
+        Spacer(Modifier.height(8.dp))
+
+        if (isLoading) {
+            // Show 3-4 rows of skeletons while loading
+            repeat(4) {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    StorySkeletonCard() // Make sure this uses Modifier.weight(1f)
+                    StorySkeletonCard()
                 }
-                // fill empty slot if odd number
-                if (rowStories.size == 1) Spacer(Modifier.weight(1f))
+            }
+        }else if(stories.isEmpty()){
+            // stories not found
+            Text("No stories found", color = TextMuted)
+        } else {
+            // Show actual data
+            stories.chunked(2).forEach { rowStories ->
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    rowStories.forEach { story ->
+                        StoryCard(
+                            story = story,
+                            modifier = Modifier.weight(1f),
+                            onClick = { navController.navigate("player/${story._id}") }
+                        )
+                    }
+                    if (rowStories.size == 1) Spacer(Modifier.weight(1f))
+                }
             }
         }
         Spacer(Modifier.height(80.dp))
@@ -215,7 +223,7 @@ private fun StoryCard(story: Story, modifier: Modifier = Modifier, onClick: () -
 
         Column(modifier = Modifier.padding(9.dp)) {
             Text(
-                text = story.title,
+                text = story.title?:"",
                 fontSize = 13.sp,
                 fontWeight = FontWeight.SemiBold,
                 color = TextPrimary,
@@ -224,7 +232,7 @@ private fun StoryCard(story: Story, modifier: Modifier = Modifier, onClick: () -
             )
             Spacer(Modifier.height(2.dp))
             Text(
-                text = story.writer,
+                text = story.writer?:"",
                 fontSize = 11.sp,
                 color = TextMuted,
                 maxLines = 1
@@ -232,7 +240,7 @@ private fun StoryCard(story: Story, modifier: Modifier = Modifier, onClick: () -
             Spacer(Modifier.height(6.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(5.dp)) {
                 MiniPill("${story.duration}:00",  Accent, BgPill)
-                MiniPill("${formatCount(story.views)} views", Color.White, AccentBg)
+                MiniPill("${formatCount(story.status?.views?:0)} views", Color.White, AccentBg)
             }
         }
     }

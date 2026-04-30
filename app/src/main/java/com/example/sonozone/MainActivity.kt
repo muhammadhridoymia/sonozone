@@ -31,7 +31,11 @@ class MainActivity : ComponentActivity() {
                 Scaffold(
                     modifier = Modifier.fillMaxSize(),
                     bottomBar = {
-                        BottomNavigation(navController)
+                        val currentRoute = navController.currentBackStackEntryAsState().value?.destination?.route
+
+                        if (currentRoute?.startsWith("player") != true) {
+                            BottomNavigation(navController)
+                        }
                     }
                 ) { innerPadding ->
 
@@ -53,14 +57,14 @@ class MainActivity : ComponentActivity() {
                             ProfileScreen() // temp
                         }
                         composable("search") {
-                            SearchScreen() // temp
+                            SearchScreen( navController = navController) // temp
                         }
                         composable("lines") {
                             LinesScreen() // temp
                         }
                         composable("player/{storyId}") { backStackEntry ->
                             val storyId = backStackEntry.arguments?.getString("storyId") ?: "1"
-                            PlayerScreen(storyId, onStoryClick = { storyId -> navController.navigate("player/$storyId") })
+                            PlayerScreen(storyId, navController=navController)
                         }
                     }
                 }
