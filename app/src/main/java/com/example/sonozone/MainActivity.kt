@@ -17,6 +17,7 @@ import com.example.sonozone.ui.screens.ProfileScreen
 import com.example.sonozone.ui.screens.SearchScreen
 import com.example.sonozone.ui.screens.LinesScreen
 import com.example.sonozone.ui.screens.PlayerScreen
+import com.example.sonozone.Auth.AuthScreen
 class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -48,13 +49,16 @@ class MainActivity : ComponentActivity() {
                         composable("home") {
                             HomeScreen( navController = navController, modifier = Modifier.fillMaxSize())
                         }
+                        composable("auth"){
+                            AuthScreen(navController = navController)
+                        }
 
                         composable("library") {
                             LibraryScreen() // temp
                         }
 
                         composable("profile") {
-                            ProfileScreen() // temp
+                            ProfileScreen( navController = navController, modifier = Modifier.fillMaxSize()) // temp
                         }
                         composable("search") {
                             SearchScreen( navController = navController) // temp

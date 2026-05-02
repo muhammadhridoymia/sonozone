@@ -141,7 +141,7 @@ fun SearchScreen(
                     modifier = Modifier
                         .clip(CircleShape)
                         .background(if (selected) Accent else BgPill)
-                        .clickable { query = cat }
+                        .clickable { viewModel.SearchStories(cat) }
                         .padding(horizontal = 14.dp, vertical = 7.dp)
                 ) {
                     Text(

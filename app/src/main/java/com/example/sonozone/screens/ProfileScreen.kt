@@ -24,12 +24,17 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.*
+import androidx.navigation.NavController
 import coil.compose.AsyncImage
+import com.example.sonozone.ui.components.LogoutDialog
 
 private val BgPage = Color(0xFF0D0D10)
 
 @Composable
-fun ProfileScreen(modifier: Modifier = Modifier) {
+fun ProfileScreen(navController: NavController, modifier: Modifier = Modifier) {
+
+    var showLogoutDialog by remember { mutableStateOf(false) }
+
     var balance by remember { mutableStateOf(50) }
 
     val username = "Sarah Johnson"
@@ -45,6 +50,14 @@ fun ProfileScreen(modifier: Modifier = Modifier) {
         horizontalAlignment = Alignment.CenterHorizontally
 
     ) {
+        if (showLogoutDialog) {
+            LogoutDialog(
+                showDialog = showLogoutDialog,
+                onDismiss = { showLogoutDialog = false },
+                onLogout = { /* Handle logout here */ }
+            )
+        }
+
         // Profile Image with edit icon
         Box {
             AsyncImage(
@@ -146,7 +159,7 @@ fun ProfileScreen(modifier: Modifier = Modifier) {
         ProfileMenuItem(
             icon = Icons.Default.List,
             title = "Saved Stories",
-            onClick = { /* Navigate to saved stories */ }
+            onClick = { navController.navigate("library") }
         )
 
         ProfileMenuItem(
@@ -164,14 +177,14 @@ fun ProfileScreen(modifier: Modifier = Modifier) {
         ProfileMenuItem(
             icon = Icons.Default.Settings,
             title = "Settings",
-            onClick = { /* Navigate to settings */ }
+            onClick = { navController.navigate("auth") }
         )
 
         Spacer(modifier = Modifier.weight(1f))
 
         // Logout button at bottom
         TextButton(
-            onClick = { /* Logout */ },
+            onClick = { showLogoutDialog = true },
             modifier = Modifier.fillMaxWidth()
                 .background( Color.White, RoundedCornerShape(12.dp))
         ) {

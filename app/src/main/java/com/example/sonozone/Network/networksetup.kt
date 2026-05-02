@@ -38,4 +38,11 @@ object RetrofitInstance {
     val SearchStoriesService: com.example.sonozone.SearchStoriesService by lazy {
         retrofit.create(com.example.sonozone.SearchStoriesService::class.java)
     }
+
+    val RegisterService: com.example.sonozone.RegisterService by lazy {
+        retrofit.create(com.example.sonozone.RegisterService::class.java)
+    }
+
+
+
 }
