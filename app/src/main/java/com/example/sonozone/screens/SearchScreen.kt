@@ -58,8 +58,8 @@ fun SearchScreen(
 
 
     val viewModel : MostSearchStoriesStoriesViewModel = viewModel()
-    val stories = viewModel.mostSearchStoriesList.value
-    val isLoading = viewModel.mostSearchloading.value
+    val stories = viewModel.SearchStoriesList.value
+    val isLoading = viewModel.Searchloading.value
 
     LaunchedEffect(Unit) {
         if (stories.isEmpty()) {
@@ -120,7 +120,7 @@ fun SearchScreen(
                     modifier = Modifier
                         .clip(RoundedCornerShape(12.dp))
                         .background(Accent)
-                        .clickable { /* trigger search */ }
+                        .clickable { viewModel.SearchStories(query) }
                         .padding(horizontal = 14.dp, vertical = 12.dp)
                 ) {
                     Text("Go", fontSize = 14.sp, fontWeight = FontWeight.SemiBold, color = Color.White)
@@ -240,7 +240,7 @@ private fun StoryCard(story: Story, modifier: Modifier = Modifier, onClick: () -
             Spacer(Modifier.height(6.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(5.dp)) {
                 MiniPill("${story.duration}:00",  Accent, BgPill)
-                MiniPill("${formatCount(story.status?.views?:0)} views", Color.White, AccentBg)
+                MiniPill("${formatCount(story.status?.likes?:0)} Likes", Color.White, AccentBg)
             }
         }
     }

@@ -7,25 +7,32 @@ import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.launch
 import retrofit2.http.GET
 import com.example.sonozone.Network.RetrofitInstance
+import retrofit2.http.Query
 
 interface GetMostSearchStoriesService {
-
     @GET("api/stories/most/searched")
     suspend fun getMostSearchStories(): StoriesResponse
 }
 
+interface SearchStoriesService {
+    @GET("api/stories/search")
+    suspend fun searchStories(
+        @Query("query") query: String
+    ): StoriesResponse
+}
+
 class MostSearchStoriesStoriesViewModel : ViewModel() {
 
-    val mostSearchStoriesList = mutableStateOf<List<Story>>(emptyList())
+    val SearchStoriesList = mutableStateOf<List<Story>>(emptyList())
 
-    val mostSearchloading = mutableStateOf(false)
+    val Searchloading = mutableStateOf(false)
 
     fun getTopStories() {
 
         viewModelScope.launch {
 
             try {
-                mostSearchloading.value = true
+                Searchloading.value = true
 
                 val response =
                     RetrofitInstance
@@ -34,8 +41,8 @@ class MostSearchStoriesStoriesViewModel : ViewModel() {
 
 
                 if (response.success) {
-                    mostSearchStoriesList.value=response.data
-                    println("Success the most searched: ${response.data}")
+                    SearchStoriesList.value=response.data
+                    println("Success the Search stories: ${response.data}")
                 } else {
                     println("Error: ${response.data}")
                 }
@@ -43,7 +50,26 @@ class MostSearchStoriesStoriesViewModel : ViewModel() {
             } catch (e: Exception) {
                 println("Error: ${e.message}")
             } finally {
-                mostSearchloading.value = false
+                Searchloading.value = false
+            }
+        }
+    }
+
+    fun SearchStories(query: String){
+        viewModelScope.launch {
+            try {
+                Searchloading.value = true
+                val response = RetrofitInstance.SearchStoriesService.searchStories(query)
+                if (response.success) {
+                    SearchStoriesList.value = response.data
+                    println("Success: ${response.data}")
+                } else {
+                    println("Error: ${response.data}")
+                }
+            } catch (e: Exception) {
+                println("Error: ${e.message}")
+            } finally {
+                Searchloading.value = false
             }
         }
     }

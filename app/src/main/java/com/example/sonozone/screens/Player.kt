@@ -284,7 +284,7 @@ fun PlayerScreen(storyId: String, navController: NavController) {
 
             Spacer(Modifier.height(10.dp))
 
-            // ── Language selector ──────────────────────────────
+            //  Language selector
             val langs = buildList {
                 if (story?.audio?.bangla  != null) add("bangla")
                 if (story?.audio?.english != null) add("english")
