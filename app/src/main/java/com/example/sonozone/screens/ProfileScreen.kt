@@ -22,19 +22,35 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.*
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.example.sonozone.ui.components.LogoutDialog
+import com.example.sonozone.Auth.AuthScreen
+import com.example.sonozone.Storage.SessionManager
 
 private val BgPage = Color(0xFF0D0D10)
 
 @Composable
 fun ProfileScreen(navController: NavController, modifier: Modifier = Modifier) {
 
-    var showLogoutDialog by remember { mutableStateOf(false) }
+    val context = LocalContext.current
+    val sessionManager = remember { SessionManager(context) }
 
+    var token by remember { mutableStateOf(sessionManager.getToken()) }
+    var name by remember { mutableStateOf(sessionManager.getName()) }
+
+
+    if (token == null) {
+        AuthScreen(navController)
+        return
+    }
+
+
+
+    var showLogoutDialog by remember { mutableStateOf(false) }
     var balance by remember { mutableStateOf(50) }
 
     val username = "Sarah Johnson"
@@ -54,7 +70,11 @@ fun ProfileScreen(navController: NavController, modifier: Modifier = Modifier) {
             LogoutDialog(
                 showDialog = showLogoutDialog,
                 onDismiss = { showLogoutDialog = false },
-                onLogout = { /* Handle logout here */ }
+                onLogout = {
+                    sessionManager.logout()
+                    token = null
+                    name = null
+                }
             )
         }
 
@@ -91,7 +111,7 @@ fun ProfileScreen(navController: NavController, modifier: Modifier = Modifier) {
         // Username with edit
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(
-                text = username,
+                text = name?:"User",
                 fontSize = 22.sp,
                 fontWeight = FontWeight.Bold,
                 color = Color(0xFF6200EE)
@@ -105,13 +125,6 @@ fun ProfileScreen(navController: NavController, modifier: Modifier = Modifier) {
                 )
             }
         }
-
-        Text(
-            text = email,
-            fontSize = 14.sp,
-            color = Color.Gray
-        )
-
         Spacer(modifier = Modifier.height(24.dp))
 
         // Balance Card - Fixed layout

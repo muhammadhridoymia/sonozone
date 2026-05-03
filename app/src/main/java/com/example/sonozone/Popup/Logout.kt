@@ -17,6 +17,7 @@ fun LogoutDialog(
     onDismiss: () -> Unit,
     onLogout: () -> Unit
 ) {
+
     if (!showDialog) return
 
     AlertDialog(

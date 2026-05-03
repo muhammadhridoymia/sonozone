@@ -10,7 +10,7 @@ import com.example.sonozone.RecommentStoriesService
 
 object RetrofitInstance {
 
-    private const val BASE_URL = "http://172.172.12.83:5000/"
+    private const val BASE_URL = "http://172.172.15.215:5000/"
 
     private val retrofit by lazy {
         Retrofit.Builder()
@@ -41,6 +41,10 @@ object RetrofitInstance {
 
     val RegisterService: com.example.sonozone.RegisterService by lazy {
         retrofit.create(com.example.sonozone.RegisterService::class.java)
+    }
+
+    val LoginService: com.example.sonozone.LoginService by lazy {
+        retrofit.create(com.example.sonozone.LoginService::class.java)
     }
 
 

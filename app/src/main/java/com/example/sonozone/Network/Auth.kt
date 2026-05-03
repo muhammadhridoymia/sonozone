@@ -37,18 +37,24 @@ interface RegisterService{
     suspend fun register(@Body data: data): AuthResponse
 }
 
-class AuthViewModel(application: Application) : AndroidViewModel(application){
+interface  LoginService{
+    @POST("api/auth/login")
+    suspend fun login(@Body data: data): AuthResponse
+}
+
+class AuthViewModel(application: Application) : AndroidViewModel(application) {
 
     private val sessionManager: SessionManager? = null
-    private val session = SessionManager( application)
+    private val session = SessionManager(application)
     val userstate = mutableStateOf<AuthResponse?>(null)
     val authloading = mutableStateOf(false)
 
-    fun Register( name: String, phone: String?, email: String?, password: String) {
+    fun Register(name: String, phone: String?, email: String?, password: String) {
         viewModelScope.launch {
             try {
                 authloading.value = true
-                val response = RetrofitInstance.RegisterService.register(data(name, phone, email, password))
+                val response =
+                    RetrofitInstance.RegisterService.register(data(name, phone, email, password))
                 if (response.success) {
                     userstate.value = response
                     session.saveAuth(response.token, response.user?.name)
@@ -61,6 +67,27 @@ class AuthViewModel(application: Application) : AndroidViewModel(application){
             } finally {
                 authloading.value = false
             }
+        }
+    }
+
+    fun Login(phone: String, email: String?, password: String) {
+        viewModelScope.launch {
+            try {
+                authloading.value = true
+                val response =
+                    RetrofitInstance.LoginService.login(data("", phone, email, password))
+                if (response.success) {
+                    userstate.value = response
+                    session.saveAuth(response.token, response.user?.name)
+                    println("Success: Login ${response}")
+                } else {
+                    println("Error: Login ${response.user}")
+                }
+            } catch (e: Exception) {
+                e("Error", e.message.toString())
+            } finally {
+                authloading.value = false
             }
         }
     }
+}

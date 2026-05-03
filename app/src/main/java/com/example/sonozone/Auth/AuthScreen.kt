@@ -27,9 +27,6 @@ fun AuthScreen(navController: NavController) {
 
     var name by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
-    var phone by remember { mutableStateOf("") }
-    var email by remember { mutableStateOf("") }
-
     var emailOrPhone by remember { mutableStateOf("") }
 
 
@@ -59,12 +56,16 @@ fun AuthScreen(navController: NavController) {
     val userstate = viewModel.userstate.value
     val authloading = viewModel.authloading.value
 
-    fun api(){
+    fun RegisterApi(){
         val (email, phone) = detectInput(emailOrPhone)
         println( " email and phone $email,$phone,")
         viewModel.Register(name,phone,email,password)
     }
 
+    fun LoginApi(){
+        val (email, phone) = detectInput(emailOrPhone)
+        viewModel.Login(phone?:"",email,password)
+    }
     LaunchedEffect(userstate) {
         if (userstate != null) {
             navController.navigate("home") {
@@ -150,9 +151,10 @@ fun AuthScreen(navController: NavController) {
                     .clickable {
                         if (isLogin) {
                             // TODO: Login
+                            LoginApi()
                         } else {
                             // TODO: Register
-                            api()
+                            RegisterApi()
                         }
                     }
                     .padding(vertical = 14.dp),

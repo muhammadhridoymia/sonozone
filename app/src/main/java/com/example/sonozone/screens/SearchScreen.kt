@@ -46,6 +46,20 @@ private val categories = listOf(
     "sad & emotional", "comedy", "fantasy", "educational",
     "horror", "islamic/moral", "folktale", "science fiction", "others"
 )
+data class writer(
+    val name: String,
+    val imageUrl: String,
+    val followers: Int
+)
+private val writers =listOf<writer>(
+    writer("Hridoy", "https://res.cloudinary.com/dyqmmzz5f/image/upload/v1766906363/chatimg/wuezecixtkawerimfnta.jpg", 1234),
+    writer("Jane Smith", "https://picsum.photos/200/200", 5678),
+    writer("Alice Johnson", "https://picsum.photos/200/200", 9),
+    writer("Bob Brown", "https://picsum.photos/200/200", 1234),
+    writer("Eve Green", "https://picsum.photos/200/200", 5678),
+    writer("Charlie White", "https://picsum.photos/200/200", 9),
+    writer("David Black", "https://picsum.photos/200/200", 1234),
+)
 
 private fun formatCount(n: Int): String =
     if (n >= 1000) "${"%.1f".format(n / 1000.0)}K" else n.toString()
@@ -152,19 +166,63 @@ fun SearchScreen(
                 }
             }
         }
-        StoriesGrid(stories, navController , isLoading)
+        StoriesGrid(stories, navController , isLoading ,)
     }
 }
 
 // Stories grid
 @Composable
-private fun StoriesGrid(stories: List<Story>, navController: NavController, isLoading: Boolean) {
+private fun StoriesGrid(stories: List<Story>, navController: NavController, isLoading: Boolean,) {
+
+    val viewModel : MostSearchStoriesStoriesViewModel = viewModel()
+
     Column(
         modifier = Modifier
             .verticalScroll(rememberScrollState())
             .padding(horizontal = 12.dp),
         verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
+
+        //Writers
+        Row(
+            modifier = Modifier
+                .horizontalScroll(rememberScrollState())
+                .padding(start = 16.dp, end = 8.dp),
+            horizontalArrangement = Arrangement.spacedBy(14.dp)
+        ) {
+            writers.forEach { writer ->
+
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier.width(80.dp)
+                    .clickable { viewModel.SearchStories(writer.name) }
+                ) {
+
+                    // Profile Image
+                    AsyncImage(
+                        model = writer.imageUrl,
+                        contentDescription = writer.name,
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier
+                            .size(70.dp)
+                            .clip(CircleShape)
+                            .background(Color.Gray.copy(alpha = 0.2f))
+                    )
+
+                    Spacer(modifier = Modifier.height(6.dp))
+
+                    // Name
+                    Text(
+                        text = writer.name,
+                        fontSize = 6.sp,
+                        color = TextPrimary,
+                        maxLines = 1
+                    )
+                }
+            }
+        }
+
+
         Spacer(Modifier.height(8.dp))
 
         if (isLoading) {

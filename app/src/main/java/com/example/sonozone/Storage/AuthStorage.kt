@@ -14,6 +14,8 @@ class SessionManager(context: Context) {
     }
 
     fun getToken(): String? = prefs.getString("token", null)
+    fun getName(): String? = prefs.getString("name", null)
+
 
     fun logout() {
         prefs.edit().clear().apply()
