@@ -55,6 +55,7 @@ fun AuthScreen(navController: NavController) {
     val viewModel : AuthViewModel = viewModel()
     val userstate = viewModel.userstate.value
     val authloading = viewModel.authloading.value
+    var Message = viewModel.authMessage.value
 
     fun RegisterApi(){
         val (email, phone) = detectInput(emailOrPhone)
@@ -93,8 +94,8 @@ fun AuthScreen(navController: NavController) {
         Spacer(Modifier.height(6.dp))
 
         Text(
-            text = if (isLogin) "Login to continue" else "Register to get started",
-            color = TextSecondary,
+            text = Message,
+            color = Color.Red,
             fontSize = 14.sp
         )
 
@@ -186,6 +187,10 @@ fun AuthScreen(navController: NavController) {
                 fontWeight = FontWeight.SemiBold,
                 modifier = Modifier.clickable {
                     isLogin = !isLogin
+                    name = ""
+                    emailOrPhone = ""
+                    password = ""
+
                 }
             )
         }

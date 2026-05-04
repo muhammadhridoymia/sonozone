@@ -1,14 +1,12 @@
 package com.example.sonozone
 
 import android.app.Application
+import android.os.Message
 import android.util.Log.e
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.AndroidViewModel
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.launch
-import retrofit2.http.GET
-import retrofit2.http.Path
 import com.example.sonozone.Network.RetrofitInstance
 import com.example.sonozone.Storage.SessionManager
 import retrofit2.http.Body
@@ -18,7 +16,8 @@ import retrofit2.http.POST
 data class AuthResponse(
     val success: Boolean,
     val token : String,
-    val user: userInf?
+    val user: userInf?,
+    val message: String?
 )
 data class userInf(
     val name: String?
@@ -48,6 +47,7 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
     private val session = SessionManager(application)
     val userstate = mutableStateOf<AuthResponse?>(null)
     val authloading = mutableStateOf(false)
+    val authMessage = mutableStateOf("")
 
     fun Register(name: String, phone: String?, email: String?, password: String) {
         viewModelScope.launch {
@@ -81,6 +81,7 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
                     session.saveAuth(response.token, response.user?.name)
                     println("Success: Login ${response}")
                 } else {
+                    authMessage.value = response.message.toString()
                     println("Error: Login ${response.user}")
                 }
             } catch (e: Exception) {
