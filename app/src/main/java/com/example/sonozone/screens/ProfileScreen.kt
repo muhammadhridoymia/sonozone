@@ -184,7 +184,7 @@ fun ProfileScreen(navController: NavController, modifier: Modifier = Modifier) {
         ProfileMenuItem(
             icon = Icons.Default.Person,
             title = "Favorite Writers",
-            onClick = { /* Navigate to favorite writers */ }
+            onClick = { navController.navigate("verify") }
         )
 
         ProfileMenuItem(

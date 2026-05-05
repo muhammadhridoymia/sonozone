@@ -47,6 +47,10 @@ object RetrofitInstance {
         retrofit.create(com.example.sonozone.LoginService::class.java)
     }
 
+    val VerifyCodeService: com.example.sonozone.VerifyCodeService by lazy {
+        retrofit.create(com.example.sonozone.VerifyCodeService::class.java)
+    }
+
 
 
 }

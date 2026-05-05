@@ -1,5 +1,6 @@
 package com.example.sonozone
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -18,10 +19,13 @@ import com.example.sonozone.ui.screens.SearchScreen
 import com.example.sonozone.ui.screens.LinesScreen
 import com.example.sonozone.ui.screens.PlayerScreen
 import com.example.sonozone.Auth.AuthScreen
+import com.example.sonozone.Auth.CodeVerifyScreen
 class MainActivity : ComponentActivity() {
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
         enableEdgeToEdge()
 
         setContent {
@@ -48,6 +52,9 @@ class MainActivity : ComponentActivity() {
 
                         composable("home") {
                             HomeScreen( navController = navController, modifier = Modifier.fillMaxSize())
+                        }
+                        composable("verify"){
+                            CodeVerifyScreen(navController = navController)
                         }
                         composable("auth"){
                             AuthScreen(navController = navController)

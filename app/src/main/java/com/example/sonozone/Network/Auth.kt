@@ -10,13 +10,16 @@ import kotlinx.coroutines.launch
 import com.example.sonozone.Network.RetrofitInstance
 import com.example.sonozone.Storage.SessionManager
 import retrofit2.http.Body
+import retrofit2.http.GET
 import retrofit2.http.POST
+import retrofit2.http.Path
 
 
 data class AuthResponse(
     val success: Boolean,
     val token : String,
     val user: userInf?,
+    val verify: Boolean,
     val message: String?
 )
 data class userInf(
@@ -31,6 +34,7 @@ data class data(
 )
 
 
+
 interface RegisterService{
     @POST("api/auth/register")
     suspend fun register(@Body data: data): AuthResponse
@@ -40,25 +44,38 @@ interface  LoginService{
     @POST("api/auth/login")
     suspend fun login(@Body data: data): AuthResponse
 }
+interface VerifyCodeService {
+    @GET("api/auth/verify/{code}")
+    suspend fun verifyCode(
+        @Path("code") code: Int
+    ): AuthResponse
+}
 
 class AuthViewModel(application: Application) : AndroidViewModel(application) {
 
     private val sessionManager: SessionManager? = null
+    fun clearMessage() {
+        authMessage.value = ""
+    }
     private val session = SessionManager(application)
     val userstate = mutableStateOf<AuthResponse?>(null)
     val authloading = mutableStateOf(false)
     val authMessage = mutableStateOf("")
+    val authVerify = mutableStateOf(false)
 
     fun Register(name: String, phone: String?, email: String?, password: String) {
         viewModelScope.launch {
             try {
                 authloading.value = true
-                val response =
-                    RetrofitInstance.RegisterService.register(data(name, phone, email, password))
+                val response = RetrofitInstance.RegisterService.register(data(name, phone, email, password))
+
                 if (response.success) {
                     userstate.value = response
                     session.saveAuth(response.token, response.user?.name)
                     println("Success: Register ${response}")
+
+                } else if (response.verify){
+                    authVerify.value = true
                 } else {
                     println("Error: Register ${response.user}")
                 }
@@ -77,9 +94,10 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
                 val response =
                     RetrofitInstance.LoginService.login(data("", phone, email, password))
                 if (response.success) {
-                    userstate.value = response
-                    session.saveAuth(response.token, response.user?.name)
+                    authVerify.value=true
                     println("Success: Login ${response}")
+                } else if (response.verify){
+                    authVerify.value = true
                 } else {
                     authMessage.value = response.message.toString()
                     println("Error: Login ${response.user}")
@@ -91,4 +109,27 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
             }
         }
     }
+    fun VerifyCode(code: Int){
+        viewModelScope.launch {
+            try {
+                authloading.value = true
+                val response = RetrofitInstance.VerifyCodeService.verifyCode(code)
+                if (response.success) {
+                    userstate.value = response
+                    session.saveAuth( response.token, response.user?.name)
+                    println("Success: Login ${response}")
+                } else {
+                    authMessage.value = response.message.toString()
+                    println("Error: Login ${response.user}")
+                }
+            } catch (e: Exception) {
+                e("Error", e.message.toString())
+            } finally {
+            }
+        }
+    }
+
+
+
+
 }

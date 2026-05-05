@@ -13,6 +13,12 @@ class SessionManager(context: Context) {
             .apply()
     }
 
+    fun verifyUser (token: String){
+        prefs.edit()
+            .putString("verifytoken", token)
+            .apply()
+    }
+
     fun getToken(): String? = prefs.getString("token", null)
     fun getName(): String? = prefs.getString("name", null)
 

@@ -5,6 +5,8 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -36,7 +38,7 @@ fun AuthScreen(navController: NavController) {
 
         return if (emailPattern.matcher(input).matches()) {
             Pair(input, null) // email
-        } else if (input.matches(Regex("^[0-9]{10,15}$"))) {
+        } else if (input.matches(Regex("^\\+?[0-9]{10,15}$"))) {
             Pair(null, input) // phone
         } else {
             Pair(null, null) // invalid
@@ -55,10 +57,22 @@ fun AuthScreen(navController: NavController) {
     val viewModel : AuthViewModel = viewModel()
     val userstate = viewModel.userstate.value
     val authloading = viewModel.authloading.value
-    var Message = viewModel.authMessage.value
+    val Message = viewModel.authMessage.value
+    val authVerify = viewModel.authVerify.value
+
+
+    //if authVerify true navigate to VerifyCodeScreen
+    if(authVerify){
+        navController.navigate("verify")
+    }
+
 
     fun RegisterApi(){
         val (email, phone) = detectInput(emailOrPhone)
+
+        if(email == null && phone == null){
+            return
+        }
         println( " email and phone $email,$phone,")
         viewModel.Register(name,phone,email,password)
     }
@@ -93,11 +107,13 @@ fun AuthScreen(navController: NavController) {
 
         Spacer(Modifier.height(6.dp))
 
-        Text(
-            text = Message,
-            color = Color.Red,
-            fontSize = 14.sp
-        )
+        if (Message.isNotEmpty()) {
+            Text(
+                text = Message,
+                color = Color.Red,
+                fontSize = 14.sp
+            )
+        }
 
         Spacer(Modifier.height(30.dp))
 
@@ -144,28 +160,29 @@ fun AuthScreen(navController: NavController) {
             Spacer(Modifier.height(6.dp))
 
             // Button
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(12.dp))
-                    .background(Accent)
-                    .clickable {
-                        if (isLogin) {
-                            // TODO: Login
-                            LoginApi()
-                        } else {
-                            // TODO: Register
-                            RegisterApi()
-                        }
+            val (email, phone) = detectInput(emailOrPhone)
+            Button(
+                enabled = !authloading && password.isNotEmpty() && (email != null || phone != null),
+                onClick = {
+                    if (isLogin) {
+                        LoginApi()
+                    } else {
+                        RegisterApi()
                     }
-                    .padding(vertical = 14.dp),
-                contentAlignment = Alignment.Center
+                },
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(10.dp)
             ) {
-                Text(
-                    text = if (isLogin) "Login" else "Register",
-                    color = Color.White,
-                    fontWeight = FontWeight.SemiBold
-                )
+                if (authloading) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(20.dp),
+                        color = Color.White)
+                }else{
+                    Text(
+                        text = if (isLogin) "Login" else "Register",
+                        fontSize = 16.sp
+                    )
+                }
             }
         }
 
@@ -190,7 +207,7 @@ fun AuthScreen(navController: NavController) {
                     name = ""
                     emailOrPhone = ""
                     password = ""
-
+                    viewModel.clearMessage()
                 }
             )
         }
