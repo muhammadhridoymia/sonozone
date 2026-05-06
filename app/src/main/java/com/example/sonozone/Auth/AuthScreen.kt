@@ -62,9 +62,12 @@ fun AuthScreen(navController: NavController) {
 
 
     //if authVerify true navigate to VerifyCodeScreen
-    if(authVerify){
-        navController.navigate("verify")
+    LaunchedEffect(authVerify) {
+        if (authVerify) {
+            navController.navigate("verify")
+        }
     }
+
 
 
     fun RegisterApi(){
@@ -104,6 +107,16 @@ fun AuthScreen(navController: NavController) {
             fontSize = 26.sp,
             fontWeight = FontWeight.Bold
         )
+        Button(
+            onClick = { navController.navigate("verify") },
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(10.dp)
+        ) {
+            Text(
+                text = "Toke send",
+                fontSize = 16.sp
+            )
+        }
 
         Spacer(Modifier.height(6.dp))
 

@@ -41,10 +41,16 @@ fun CodeVerifyScreen(navController: NavController) {
     val viewModel: AuthViewModel = viewModel()
     val authloading = viewModel.authloading.value
     val Message = viewModel.authMessage.value
+    val userstate = viewModel.userstate.value
 
-    LaunchedEffect(Unit) {
-        viewModel.VerifyCode( Code.toInt())
+    LaunchedEffect(userstate) {
+        if (userstate != null) {
+            navController.navigate("profile") {
+                popUpTo(0)
+            }
+        }
     }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -172,7 +178,7 @@ fun CodeVerifyScreen(navController: NavController) {
             Button(
                 enabled = !authloading && Code.length == 6,
                 onClick = {
-                    // Add verification logi
+                    viewModel.VerifyCode(Code)
                 },
                 modifier = Modifier
                     .fillMaxWidth()
