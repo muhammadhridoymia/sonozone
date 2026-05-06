@@ -29,21 +29,8 @@ fun AuthScreen(navController: NavController) {
 
     var name by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
-    var emailOrPhone by remember { mutableStateOf("") }
+    var email by remember { mutableStateOf("") }
 
-
-    // check input
-    fun detectInput(input: String): Pair<String?, String?> {
-        val emailPattern = android.util.Patterns.EMAIL_ADDRESS
-
-        return if (emailPattern.matcher(input).matches()) {
-            Pair(input, null) // email
-        } else if (input.matches(Regex("^\\+?[0-9]{10,15}$"))) {
-            Pair(null, input) // phone
-        } else {
-            Pair(null, null) // invalid
-        }
-    }
 
     val BgPage = Color(0xFF0D0D10)
     val BgCard = Color(0xFF18171F)
@@ -71,18 +58,18 @@ fun AuthScreen(navController: NavController) {
 
 
     fun RegisterApi(){
-        val (email, phone) = detectInput(emailOrPhone)
 
-        if(email == null && phone == null){
+        if(email == "" || password == ""){
             return
         }
-        println( " email and phone $email,$phone,")
-        viewModel.Register(name,phone,email,password)
+        viewModel.Register(name,email,password)
     }
 
     fun LoginApi(){
-        val (email, phone) = detectInput(emailOrPhone)
-        viewModel.Login(phone?:"",email,password)
+        if(email == "" || password == ""){
+            return
+        }
+        viewModel.Login (email,password)
     }
     LaunchedEffect(userstate) {
         if (userstate != null) {
@@ -152,9 +139,9 @@ fun AuthScreen(navController: NavController) {
             }
 
             InputField(
-                value = emailOrPhone,
-                onValueChange = { emailOrPhone = it },
-                placeholder = "Email or Phone",
+                value = email,
+                onValueChange = { email = it },
+                placeholder = "Email Address",
                 textColor = TextPrimary,
                 hintColor = TextMuted,
                 bgColor = BgInput
@@ -173,9 +160,8 @@ fun AuthScreen(navController: NavController) {
             Spacer(Modifier.height(6.dp))
 
             // Button
-            val (email, phone) = detectInput(emailOrPhone)
             Button(
-                enabled = !authloading && password.isNotEmpty() && (email != null || phone != null),
+                enabled = !authloading && password.isNotEmpty() && (email.isNotEmpty() || name.isNotEmpty()),
                 onClick = {
                     if (isLogin) {
                         LoginApi()
@@ -218,7 +204,7 @@ fun AuthScreen(navController: NavController) {
                 modifier = Modifier.clickable {
                     isLogin = !isLogin
                     name = ""
-                    emailOrPhone = ""
+                    email = ""
                     password = ""
                     viewModel.clearMessage()
                 }

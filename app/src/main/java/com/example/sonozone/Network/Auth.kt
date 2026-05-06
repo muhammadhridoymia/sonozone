@@ -28,7 +28,6 @@ data class userInf(
 
 data class data(
     val name: String,
-    val phone: String?,
     val email: String?,
     val password: String
 )
@@ -63,19 +62,15 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
     val authMessage = mutableStateOf("")
     val authVerify = mutableStateOf(false)
 
-    fun Register(name: String, phone: String?, email: String?, password: String) {
+    fun Register(name: String, email: String?, password: String) {
         viewModelScope.launch {
             try {
                 authloading.value = true
-                val response = RetrofitInstance.RegisterService.register(data(name, phone, email, password))
+                val response = RetrofitInstance.RegisterService.register(data(name, email, password))
 
-                if (response.success==true) {
-                    userstate.value = response
-                    session.saveAuth(response.token?:"", response.user?.name)
-                    println("Success: Register ${response}")
-
-                } else if (response.verify== true){
-                    authVerify.value = true
+                if (response.verify==true) {
+                    authVerify.value=true
+                    println( "Regiser data: ${response.verify}")
                 } else {
                     println("Error: Register ${response.user}")
                 }
@@ -87,12 +82,12 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    fun Login(phone: String, email: String?, password: String) {
+    fun Login( email: String?, password: String) {
         viewModelScope.launch {
             try {
                 authloading.value = true
                 val response =
-                    RetrofitInstance.LoginService.login(data("", phone, email, password))
+                    RetrofitInstance.LoginService.login(data("",  email, password))
                  if (response.success ==true){
                     userstate.value = response
                     session.saveAuth(response.token?:"", response.user?.name)
