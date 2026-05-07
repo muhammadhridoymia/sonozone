@@ -95,19 +95,19 @@ fun HomeScreen(navController: NavController, modifier: Modifier = Modifier) {
         }
 
         item {
-            StorySection("Popular Stories", popularList,navController = navController)
+            StorySection("Popular", popularList,navController = navController)
         }
 
         item {
-            StorySection("Top Stories This Week", weekList,navController = navController)
+            StorySection("Top of the  Week", weekList,navController = navController)
         }
 
         item {
-            StorySection("Top Stories This Month", monthList,navController = navController)
+            StorySection("Top of the Month", monthList,navController = navController)
         }
 
         item {
-            StorySection("Top Stories This Year", yearList,navController = navController)
+            StorySection("Top of the Year", yearList,navController = navController)
         }
 
         item {

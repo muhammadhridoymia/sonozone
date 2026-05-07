@@ -88,22 +88,6 @@ fun ProfileScreen(navController: NavController, modifier: Modifier = Modifier) {
                     .clip(CircleShape),
                 contentScale = ContentScale.Crop
             )
-            // Edit icon overlay
-            IconButton(
-                onClick = { /* Edit profile image */ },
-                modifier = Modifier
-                    .align(Alignment.BottomEnd)
-                    .size(36.dp)
-                    .background(Color.White, CircleShape)
-                    .clip(CircleShape)
-            ) {
-                Icon(
-                    Icons.Default.Edit,
-                    contentDescription = "Edit",
-                    modifier = Modifier.size(18.dp),
-                    tint = Color(0xFF6200EE)
-                )
-            }
         }
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -114,16 +98,8 @@ fun ProfileScreen(navController: NavController, modifier: Modifier = Modifier) {
                 text = name?:"User",
                 fontSize = 22.sp,
                 fontWeight = FontWeight.Bold,
-                color = Color(0xFF6200EE)
+                color = Color.White
             )
-            IconButton(onClick = { /* Edit username */ }) {
-                Icon(
-                    Icons.Default.Edit,
-                    contentDescription = "Edit",
-                    modifier = Modifier.size(16.dp),
-                    tint = Color.Gray
-                )
-            }
         }
         Spacer(modifier = Modifier.height(24.dp))
 
