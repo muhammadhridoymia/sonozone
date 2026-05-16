@@ -94,16 +94,16 @@ fun AuthScreen(navController: NavController) {
             fontSize = 26.sp,
             fontWeight = FontWeight.Bold
         )
-        Button(
-            onClick = { navController.navigate("verify") },
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(10.dp)
-        ) {
-            Text(
-                text = "Toke send",
-                fontSize = 16.sp
-            )
-        }
+//        Button(
+//            onClick = { navController.navigate("verify") },
+//            modifier = Modifier.fillMaxWidth(),
+//            shape = RoundedCornerShape(10.dp)
+//        ) {
+//            Text(
+//                text = "Toke send",
+//                fontSize = 16.sp
+//            )
+//        }
 
         Spacer(Modifier.height(6.dp))
 

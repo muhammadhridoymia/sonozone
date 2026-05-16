@@ -30,11 +30,11 @@ import androidx.media3.common.MediaItem
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
-import com.example.sonozone.Audio
 import com.example.sonozone.AudioViewModel
 import com.example.sonozone.RecommentStoriesViewModel
 import com.example.sonozone.Story
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 // ── Tokens ────────────────────────────────────────────────────
 private val BgPage      = Color(0xFF0D0D10)
@@ -75,58 +75,103 @@ fun PlayerScreen(storyId: String, navController: NavController) {
 
     val context = LocalContext.current
 
-    //select language
-    val bangla = story?.audio?.bangla?.url
-    val english = story?.audio?.english?.url
-    val arabic = story?.audio?.arabic?.url
-    val lang = if (bangla != null) "bangla" else if (english != null) "english" else "arabic"
+    var selectedLang by remember { mutableStateOf<String?>(null) }
 
-    // Audio language selection
-    var selectedLang by remember { mutableStateOf(lang) }
 
-    val audioUrl = when (selectedLang) {
-        "english" -> story?.audio?.english?.url
-        "arabic"  -> story?.audio?.arabic?.url
-        else      -> story?.audio?.bangla?.url
-    }
-
-    // ExoPlayer
-    val player = remember {
-        ExoPlayer.Builder(context).build().apply {
-            audioUrl?.let {
-                setMediaItem(MediaItem.fromUri(it))
-                prepare()
-            }
+    LaunchedEffect(story) {
+        selectedLang = when {
+            !story?.audio?.bangla?.url.isNullOrEmpty() -> "bangla"
+            !story?.audio?.english?.url.isNullOrEmpty() -> "english"
+            !story?.audio?.arabic?.url.isNullOrEmpty() -> "arabic"
+            else -> null
         }
     }
 
-    var isPlaying      by remember { mutableStateOf(false) }
-    var isBuffering    by remember { mutableStateOf(false) }
+    val audioUrl = when (selectedLang) {
+        "bangla" -> story?.audio?.bangla?.url
+        "english" -> story?.audio?.english?.url
+        "arabic" -> story?.audio?.arabic?.url
+        else -> null
+    }
+
+
+
+    // ExoPlayer
+    val player = remember {
+        ExoPlayer.Builder(context).build()
+    }
+
+    var isPlaying by remember { mutableStateOf(false) }
+    var isBuffering by remember { mutableStateOf(false) }
+    var isPrepared by remember { mutableStateOf(false) }
     var currentMs      by remember { mutableLongStateOf(0L) }
     var durationMs     by remember { mutableLongStateOf(1L) }
     var isLiked        by remember { mutableStateOf(false) }
+    var isSeeking by remember { mutableStateOf(false) }
+
 
     // Progress polling
-    LaunchedEffect(isPlaying) {
-        while (isPlaying) {
-            currentMs  = player.currentPosition
-            durationMs = player.duration.coerceAtLeast(1L)
-            delay(500)
+    LaunchedEffect(player) {
+        while (true) {
+            // Only update currentMs if the user is NOT dragging the slider
+            if (!isSeeking && player.isPlaying) {
+                currentMs = player.currentPosition
+            }
+
+            val dur = player.duration
+            if (dur > 0) durationMs = dur
+
+            delay(200) // Lower delay means smoother slider movement
         }
     }
 
     // Reload on lang change
     LaunchedEffect(audioUrl) {
-        audioUrl?.let {
-            player.stop()
-            player.setMediaItem(MediaItem.fromUri(it))
-            player.prepare()
-            isPlaying = false
-            currentMs = 0L
-        }
+        if (audioUrl.isNullOrEmpty()) return@LaunchedEffect
+
+        val newUri = MediaItem.fromUri(audioUrl)
+        val currentUri = player.currentMediaItem?.localConfiguration?.uri?.toString()
+
+        if (currentUri == audioUrl) return@LaunchedEffect
+
+        player.stop()
+        player.clearMediaItems()
+        player.setMediaItem(newUri)
+        player.prepare()
+
+        isPlaying = false
+        currentMs = 0L
     }
 
-    DisposableEffect(Unit) { onDispose { player.release() } }
+
+    LaunchedEffect(player) {
+        player.addListener(object : androidx.media3.common.Player.Listener {
+
+            override fun onPlaybackStateChanged(state: Int) {
+                when (state) {
+                    androidx.media3.common.Player.STATE_BUFFERING -> {
+                        isBuffering = true
+                    }
+
+                    androidx.media3.common.Player.STATE_READY -> {
+                        isBuffering = false
+                        isPrepared = true
+                    }
+
+                    androidx.media3.common.Player.STATE_ENDED -> {
+                        isPlaying = false
+                    }
+                }
+            }
+        })
+    }
+
+    // Fix: Pass 'player' as the key so it re-triggers if the player instance changes
+    DisposableEffect(player) {
+        onDispose {
+            player.release()
+        }
+    }
 
     Column(
         modifier = Modifier
@@ -178,11 +223,20 @@ fun PlayerScreen(storyId: String, navController: NavController) {
             Spacer(Modifier.height(20.dp))
 
             // ── Progress ───────────────────────────────────────
+            val scope = rememberCoroutineScope()
             Slider(
                 value = currentMs.toFloat(),
                 onValueChange = {
+                    isSeeking = true
                     currentMs = it.toLong()
-                    player.seekTo(it.toLong())
+                },
+                onValueChangeFinished = {
+                    player.seekTo(currentMs)
+                    // Launch a coroutine to handle the settling delay
+                    scope.launch {
+                        delay(150) // Wait 150ms for ExoPlayer to settle on the new position
+                        isSeeking = false
+                    }
                 },
                 valueRange = 0f..durationMs.toFloat(),
                 modifier = Modifier.fillMaxWidth(),
@@ -221,14 +275,17 @@ fun PlayerScreen(storyId: String, navController: NavController) {
                         .clip(CircleShape)
                         .background(Accent)
                         .clickable {
-                            if (isPlaying) {
-                                player.pause()
-                                isPlaying = false
-                            } else {
-                                player.play()
-                                isPlaying = true
+                        if (isPlaying) {
+                            player.pause()
+                            isPlaying = false
+                        } else {
+                            if (player.playbackState == androidx.media3.common.Player.STATE_IDLE) {
+                                player.prepare()
                             }
-                        },
+                            player.play()
+                            isPlaying = true
+                        }
+                    },
                     contentAlignment = Alignment.Center
                 ) {
                     if (isBuffering) {
@@ -286,14 +343,14 @@ fun PlayerScreen(storyId: String, navController: NavController) {
 
             //  Language selector
             val langs = buildList {
-                if (story?.audio?.bangla  != null) add("bangla")
-                if (story?.audio?.english != null) add("english")
-                if (story?.audio?.arabic  != null) add("arabic")
+                if (!story?.audio?.bangla?.url.isNullOrEmpty()) add("bangla")
+                if (!story?.audio?.english?.url.isNullOrEmpty()) add("english")
+                if (!story?.audio?.arabic?.url.isNullOrEmpty()) add("arabic")
             }
-            if (langs.size > 1) {
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     langs.forEach { lang ->
                         val active = selectedLang == lang
+                        println(lang)
                         Box(
                             modifier = Modifier
                                 .clip(CircleShape)
@@ -310,7 +367,6 @@ fun PlayerScreen(storyId: String, navController: NavController) {
                     }
                 }
                 Spacer(Modifier.height(10.dp))
-            }
 
             // ── Read button ────────────────────────────────────
             OutlinedButton(
@@ -337,7 +393,9 @@ fun PlayerScreen(storyId: String, navController: NavController) {
             related.chunked(2).forEach { row ->
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(10.dp),
-                    modifier = Modifier.fillMaxWidth().padding(bottom = 10.dp)
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 10.dp)
                 ) {
                     row.forEach { s ->
                         RelatedCard(
@@ -464,3 +522,4 @@ private fun formatMs(ms: Long): String {
 
 private fun formatCount(n: Int) =
     if (n >= 1000) "${"%.1f".format(n / 1000.0)}K" else n.toString()
+
